@@ -1456,6 +1456,23 @@
     }
 
     /* ============================================================
+   WHATSAPP CONNECT — Meta embedded signup
+   ============================================================ */
+    .wa-connect {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .8rem;
+      margin-top: 1.6rem
+    }
+
+    #wa-status {
+      font-family: var(--sans);
+      font-size: .88rem;
+      color: var(--ink-60)
+    }
+
+    /* ============================================================
    FOOTER — split panel: living visual on the left, content on the right
    ============================================================ */
     footer {
@@ -2477,6 +2494,11 @@
           of our clients, we use WhatsApp Business API, customer names, phone numbers and message content to send
           property details, schedule site visits and capture leads. Our clients use our system to manage their customer
           communication from a single dashboard.</p>
+        <!-- WhatsApp embedded signup: lets clients connect their own WhatsApp Business number -->
+        <div class="wa-connect rv">
+          <button id="connect-wa" class="btn lime magnetic snd-hover">Connect your WhatsApp Business</button>
+          <div id="wa-status" role="status" aria-live="polite"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -3025,6 +3047,76 @@ ${f.msg.value}`);
       wantPortrait.addEventListener('change', pick);
       pick();
     })();
+  </script>
+
+  <!-- ===== WHATSAPP EMBEDDED SIGNUP (Meta Business) ===== -->
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"></script>
+
+  <script>
+    let wabaId = null;
+    let phoneNumberId = null;
+
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '1111754955165517',
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v21.0'
+      });
+    };
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://facebook.com') return;
+      if (typeof event.data !== 'string') return;
+
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (data?.type === 'WA_EMBEDDED_SIGNUP' && data.event === 'FINISH' &&
+        data.data?.waba_id && data.data?.phone_number_id) {
+        wabaId = data.data.waba_id;
+        phoneNumberId = data.data.phone_number_id;
+      }
+    });
+
+    document.getElementById('connect-wa').addEventListener('click', () => {
+      const status = document.getElementById('wa-status');
+      if (!window.FB) {
+        status.textContent = 'Facebook signup is not available right now. Please try again shortly.';
+        return;
+      }
+
+      FB.login((response) => {
+        if (response.authResponse && response.authResponse.code) {
+          const code = response.authResponse.code;
+          fetch('https://teamapexgaming.app.n8n.cloud/webhook/whatsapp-connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, wabaId, phoneNumberId })
+          })
+            .then((result) => {
+              if (!result.ok) throw new Error(`Webhook returned ${result.status}`);
+              status.textContent = 'WhatsApp connected.';
+            })
+            .catch((error) => {
+              console.error('WhatsApp signup handoff failed:', error);
+              status.textContent = 'Could not complete WhatsApp signup. Please try again.';
+            });
+        } else {
+          status.textContent = 'Signup was cancelled.';
+        }
+      }, {
+        config_id: '1469679065081628',
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: { setup: {}, sessionInfoVersion: '3' }
+      });
+    });
   </script>
 </body>
 </html>
