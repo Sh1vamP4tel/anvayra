@@ -1611,6 +1611,22 @@
       color: var(--ink-30)
     }
 
+    .foot-identity p {
+      margin: .2rem 0
+    }
+
+    .foot-legal-links {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: .25rem .7rem
+    }
+
+    .foot-identity a {
+      color: var(--ink-60);
+      text-decoration: underline;
+      text-underline-offset: 3px
+    }
+
     .socials {
       display: flex;
       gap: .6rem
@@ -2451,6 +2467,20 @@
     </div>
   </section>
 
+  <!-- ===== TECH PROVIDER ===== -->
+  <section id="tech-provider" style="background:var(--bg-soft)">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="eyebrow">Tech Provider</span>
+        <h2>How We Work With Real Estate Clients as a Tech Provider</h2>
+        <p class="lead">Anvayra provides WhatsApp automation as a service for real estate builders and agents. On behalf
+          of our clients, we use WhatsApp Business API, customer names, phone numbers and message content to send
+          property details, schedule site visits and capture leads. Our clients use our system to manage their customer
+          communication from a single dashboard.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== INDUSTRIES ===== -->
   <section id="industries">
     <div class="wrap">
@@ -2602,13 +2632,13 @@
         <p class="lead">Tell me what's eating your time. I'll reply within 48 hours with honest advice — even if the
           honest answer is "you don't need AI for that yet."</p>
         <div class="quick">
-          <a class="glass snd-hover" href="mailto:billionaireshivam4@gmail.com">
+          <a class="glass snd-hover" href="mailto:shivam@anvayra.vercel.app">
             <span class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111"
                 stroke-width="1.6">
                 <rect x="2" y="4" width="20" height="16" rx="3" />
                 <path d="m2 7 10 6L22 7" />
               </svg></span>
-            <span>Email us<small>billionaireshivam4@gmail.com</small></span>
+            <span>Email us<small>shivam@anvayra.vercel.app</small></span>
           </a>
           <a class="glass snd-hover" href="tel:+919165826867">
             <span class="qi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111"
@@ -2735,13 +2765,10 @@
             <a href="#industries">Who I help</a>
             <a href="#about">About</a>
               <a href="#faq">FAQ</a>
-              <a href="privacy/">Privacy</a>
-              <a href="terms/">Terms</a>
-              <a href="data-deletion/">Data deletion</a>
             </div>
           <div class="foot-col">
             <h4>Reach me</h4>
-            <a href="mailto:billionaireshivam4@gmail.com">Email</a>
+            <a href="mailto:shivam@anvayra.vercel.app">Email</a>
             <a href="tel:+919165826867">Call</a>
             <a href="https://wa.me/919165826867" target="_blank" rel="noopener">WhatsApp</a>
             <a href="https://www.linkedin.com/in/shivam-patel-189b63420/" target="_blank" rel="noopener">LinkedIn</a>
@@ -2750,7 +2777,14 @@
         </div>
 
         <div class="foot-bottom">
-          <p>© 2026 Anvayra · Built by hand, not by template.</p>
+          <div class="foot-identity">
+            <p>© 2026 Anvayra - AI Automation Studio</p>
+            <p>Operated by Shivam Kushwah | Freelance Agency, Naya Raipur, India</p>
+            <p>Contact: <a href="mailto:shivam@anvayra.vercel.app">shivam@anvayra.vercel.app</a>
+              <span class="foot-legal-links">| <a href="privacy/">Privacy Policy</a> | <a href="terms/">Terms</a> |
+                <a href="data-deletion/">Data Deletion</a></span>
+            </p>
+          </div>
           <div class="socials">
             <!-- TODO: real social links -->
             <a class="glass snd-hover" href="https://www.instagram.com/the_shivam.ai/" aria-label="Instagram"><svg
@@ -2925,7 +2959,7 @@ Audience: ${f.audience.value || 'Not specified'}
 Preferred contact: ${contactPref}
 
 ${f.msg.value}`);
-      location.href = `mailto:billionaireshivam4@gmail.com?subject=${encodeURIComponent('New enquiry from ' + (f.name.value || 'website'))}&body=${body}`;
+      location.href = `mailto:shivam@anvayra.vercel.app?subject=${encodeURIComponent('New enquiry from ' + (f.name.value || 'website'))}&body=${body}`;
     });
 
     /* ---------- custom professional dropdowns (progressively enhance native <select>) ---------- */
