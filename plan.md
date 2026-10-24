@@ -49,7 +49,7 @@ Secrets handling: App Secret lives in n8n credential `Meta App Credentials` (htt
 ## Part 5 — Before App Review (2 quick checks, ~5 min)
 
 - [ ] n8n credential **Meta App Credentials**: Name field = `client_secret`, Value = App Secret (Meta > App Settings > Basic > Show).
-- [ ] Test send: dashboard → Send Test Message to your own number (uses env token). If env vars not set on n8n Cloud: set `META_ACCESS_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` in instance envs (same vars Real Estate workflow already relies on).
+- [ ] Send route uses the n8n **WhatsApp Business Cloud node** + existing `WhatsApp account` credential. To send: paste your **Phone Number ID** (Meta > WhatsApp > API Setup) into the dashboard field — or connect a client first and the dashboard auto-fills it.
 
 ## Next phase (after verification)
 
