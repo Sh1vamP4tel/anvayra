@@ -1,0 +1,44 @@
+1. Website mein kaun-kaun se pages aur features honge
+
+Public pages (Meta business verification ke liye website live aur reachable honi chahiye):
+
+Home (Hero): aapka naam/brand, ek line mein kya karte ho, do buttons: “Free Consultation” aur “WhatsApp pe baat karein” (wa.me link).
+Services: AI Websites, AI Automations, AI Voice Calling Agents, Digital Marketing. Har service ka short description, kya milega, aur CTA.
+Portfolio / Demo: pehle se jo portfolio hai uska content, aur Meera voice agent demo (audio ya short video) ke saath.
+About: aap kaun ho, experience, aapka business kis type ka hai (freelance/sole proprietor), contact details.
+How it works: 3–4 steps (baat, plan, build, launch).
+Pricing / Packages (optional, lekin trust ke liye acha).
+FAQ
+Contact: form, WhatsApp button, email, phone. Form mein ek consent checkbox ho: “Mujhe WhatsApp par messages receive karne ki permission hai.”
+Thank You page: form submit ke baad.
+Legal pages (zaroori): Privacy Policy, Terms of Service, Data Deletion Instructions. Meta inke live URLs maangega.
+Footer: business ka legal naam, address, email, social links, copyright. Verification mein ye match hona chahiye.
+
+Backend features (app review ke liye chahiye):
+
+“Connect WhatsApp” button (Embedded Signup flow): client Facebook login karke apna WhatsApp Business Account aur number select karega.
+Connected account status: dashboard par WABA ID, phone number, connection status.
+Send message screen: contact select karo, text ya approved template bhejo.
+Incoming messages / inbox: webhook se aaye replies dikhein.
+Opt-in aur STOP handling: consent store ho, “STOP” likhne par opt-out ho.
+Disconnect option aur data deletion request form.
+
+2. Backend (n8n) kaise banega
+
+Frontend (index.html) kabhi bhi App Secret ya Access Token na rakhe. Ye sab n8n ke credentials mein rahe.
+
+Minimum 4 workflows:
+
+Webhook: Meta verification (GET request, hub.challenge return karna) aur incoming message receive karna.
+Webhook: Send message, jo website se request leta hai aur Graph API call karke Meta ko bhejta hai.
+Webhook: Embedded Signup token exchange, jo code ko access token mein badalta hai.
+Lead storage (Google Sheets ya koi DB) jo form submissions aur consent save kare.
+
+Website ko n8n webhook ko secret header ke saath call karna chahiye, taaki koi bhi bahar se seedha hit na kar sake.
+
+3. Meta par kya-kya submit karna hai
+
+Business Verification: legal business name, address, website URL, aur business documents (GST, registration ya utility bill). Freelancer ke liye sole proprietor documents mein dikkat aa sakti hai, isliye pehle check karo ki aapke paas kaun se documents available hain.
+App Settings: Privacy Policy URL, Terms URL, Data Deletion URL, app icon (1024x1024), category, aur contact email.
+App Review: har permission (jaise whatsapp_business_messaging, whatsapp_business_management) ke liye use-case description aur screen recording.
+Reviewer instructions: test steps, test login, aur test WhatsApp number. Reviewer ko app ko actually use karne ka tareeka chahiye, warna reject ho jaata hai.

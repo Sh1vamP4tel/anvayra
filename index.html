@@ -2252,13 +2252,14 @@
       <a href="#about">About</a>
       <a href="#work">Demos</a>
       <a href="#faq">FAQ</a>
+      <a href="/dashboard.html">Dashboard</a>
     </div>
     <a class="btn primary nav-cta magnetic" href="#contact">Book a Call <span class="arr">→</span></a>
     <button class="burger" id="burger" aria-label="Open menu"><span></span><span></span><span></span></button>
   </nav>
   <div class="m-menu" id="mmenu">
     <a href="#services">Services</a><a href="#about">About</a><a href="#work">Demos</a><a href="#faq">FAQ</a><a
-      href="#contact">Book a Call</a>
+      href="/dashboard.html">Client Dashboard</a><a href="#contact">Book a Call</a>
   </div>
 
   <!-- ===== HERO ===== -->
@@ -2291,6 +2292,23 @@
       <div class="rv"><b>100%</b>custom-built, no templates</div>
     </div>
   </header>
+
+  <!-- ===== WHATSAPP CONNECT (Embedded Signup for Clients - Tech Provider) ===== -->
+  <section id="whatsapp-connect-section" style="padding:60px 20px;text-align:center;background:#f5f7ff;">
+    <div class="wrap">
+      <div class="sec-head rv">
+        <span class="eyebrow">Client Onboarding</span>
+        <h2>Connect Your WhatsApp Business</h2>
+        <p class="lead">Connect your WhatsApp in 2 minutes. Keep using the WhatsApp app and get API automation on
+          top.</p>
+      </div>
+      <button id="connectWhatsappBtn"
+        style="background:#25D366;color:#fff;padding:16px 32px;border:none;border-radius:8px;font-size:18px;cursor:pointer;margin-top:20px;font-family:var(--sans);font-weight:700;">
+        🟢 Connect WhatsApp Business
+      </button>
+      <div id="connectStatus" style="margin-top:20px;font-weight:bold;"></div>
+    </div>
+  </section>
 
   <!-- ===== MARQUEE ===== -->
   <div class="marquee" aria-hidden="true">
@@ -2489,11 +2507,14 @@
     <div class="wrap">
       <div class="sec-head rv">
         <span class="eyebrow">Tech Provider</span>
-        <h2>How We Work With Real Estate Clients as a Tech Provider</h2>
-        <p class="lead">Anvayra provides WhatsApp automation as a service for real estate builders and agents. On behalf
-          of our clients, we use WhatsApp Business API, customer names, phone numbers and message content to send
-          property details, schedule site visits and capture leads. Our clients use our system to manage their customer
-          communication from a single dashboard.</p>
+        <h2>How We Work With Clients as a Tech Provider</h2>
+        <p class="lead">Anvayra Automation is a Tech Provider for WhatsApp Business Platform. We provide AI voice agents
+          and WhatsApp automation on behalf of our clients across multiple industries including real estate, clinics
+          &amp; hospitals, restaurants, e-commerce and local businesses.</p>
+        <p>On behalf of our clients, we use WhatsApp Business messages, customer names, phone numbers, message content
+          and business profile data to automatically send property details, appointment reminders, order updates,
+          booking confirmations and capture leads. Our clients use our dashboard to manage their customer communication
+          from a single place.</p>
         <!-- WhatsApp embedded signup: lets clients connect their own WhatsApp Business number -->
         <div class="wa-connect rv">
           <button id="connect-wa" class="btn lime magnetic snd-hover">Connect your WhatsApp Business</button>
@@ -2802,7 +2823,7 @@
           <div class="foot-identity">
             <p>© 2026 Anvayra - AI Automation Studio</p>
             <p>Operated by Shivam Kushwah | Freelance Agency, Naya Raipur, India</p>
-            <p>Contact: <a href="mailto:shivam@anvayra.vercel.app">shivam@anvayra.vercel.app</a>
+            <p>Contact: <a href="mailto:shivamkushwahsironj@gmail.com">shivamkushwahsironj@gmail.com</a>
               <span class="foot-legal-links">| <a href="privacy/">Privacy Policy</a> | <a href="terms/">Terms</a> |
                 <a href="data-deletion/">Data Deletion</a></span>
             </p>
@@ -3054,12 +3075,22 @@ ${f.msg.value}`);
     src="https://connect.facebook.net/en_US/sdk.js"></script>
 
   <script>
+    // ===== ANVAYRA CONFIG - single place to update app / n8n backend =====
+    const ANVAYRA_CONFIG = {
+      appId: '1111754955165517',
+      configId: '1469679065081628',
+      // n8n backend exchanges the code for a token server-side. When you replace
+      // the n8n domain, update this ONE value (path too if workflow name differs).
+      backendWebhookUrl: 'https://teamapexgaming.app.n8n.cloud/webhook/whatsapp-callback',
+      redirectUri: 'https://anvayra.vercel.app/'
+    };
+
     let wabaId = null;
     let phoneNumberId = null;
 
     window.fbAsyncInit = function () {
       FB.init({
-        appId: '1111754955165517',
+        appId: ANVAYRA_CONFIG.appId,
         autoLogAppEvents: true,
         xfbml: true,
         version: 'v21.0'
@@ -3084,38 +3115,58 @@ ${f.msg.value}`);
       }
     });
 
-    document.getElementById('connect-wa').addEventListener('click', () => {
-      const status = document.getElementById('wa-status');
+    // Embedded Signup: Facebook returns a temporary CODE (never a token) to the
+    // frontend. We post it to n8n, which exchanges it for a long-lived token
+    // using the app secret. The secret NEVER touches the frontend.
+    function launchEmbeddedSignup(statusEl) {
       if (!window.FB) {
-        status.textContent = 'Facebook signup is not available right now. Please try again shortly.';
+        statusEl.textContent = 'Facebook signup is not available right now. Please try again shortly.';
         return;
       }
+      statusEl.textContent = 'Opening WhatsApp...';
 
       FB.login((response) => {
         if (response.authResponse && response.authResponse.code) {
           const code = response.authResponse.code;
-          fetch('https://teamapexgaming.app.n8n.cloud/webhook/whatsapp-connect', {
+          statusEl.textContent = 'Exchanging code... Please wait';
+          fetch(ANVAYRA_CONFIG.backendWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, wabaId, phoneNumberId })
+            body: JSON.stringify({
+              code: code,
+              wabaId: wabaId,
+              phoneNumberId: phoneNumberId,
+              redirect_uri: ANVAYRA_CONFIG.redirectUri
+            })
           })
             .then((result) => {
               if (!result.ok) throw new Error(`Webhook returned ${result.status}`);
-              status.textContent = 'WhatsApp connected.';
+              return result.json();
+            })
+            .then((data) => {
+              statusEl.textContent = '✅ WhatsApp Connected! WABA ID: ' + (data.waba_id || wabaId || 'Saved');
+              console.log('Backend success', data);
             })
             .catch((error) => {
               console.error('WhatsApp signup handoff failed:', error);
-              status.textContent = 'Could not complete WhatsApp signup. Please try again.';
+              statusEl.textContent = '❌ Could not complete WhatsApp signup. Please try again.';
             });
         } else {
-          status.textContent = 'Signup was cancelled.';
+          statusEl.textContent = '❌ Signup was cancelled or not authorized.';
         }
       }, {
-        config_id: '1469679065081628',
+        config_id: ANVAYRA_CONFIG.configId,
         response_type: 'code',
         override_default_response_type: true,
         extras: { setup: {}, sessionInfoVersion: '3' }
       });
+    }
+
+    document.getElementById('connect-wa').addEventListener('click', () => {
+      launchEmbeddedSignup(document.getElementById('wa-status'));
+    });
+    document.getElementById('connectWhatsappBtn').addEventListener('click', () => {
+      launchEmbeddedSignup(document.getElementById('connectStatus'));
     });
   </script>
 </body>

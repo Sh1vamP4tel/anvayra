@@ -1,0 +1,185 @@
+आप Tech Provider बनना चाहते हैं, इसलिए Meta से ये permissions Advanced Access में चाहिए:
+
+Permission	आपके ऐप में काम
+whatsapp_business_messaging	Client की ओर से WhatsApp message भेजना, template message भेजना
+whatsapp_business_management	WABA, phone numbers, templates देखना/बनाना/delete करना
+business_management	Meta Business assets और client onboarding/access manage करना
+Meta के Tech Provider flow में whatsapp_business_messaging और whatsapp_business_management Advanced Access ज़रूरी हैं; business_management भी business assets के लिए चाहिए।
+
+आपकी website में क्या-क्या होना चाहिए
+आपके anvayra.vercel.app को अब एक WhatsApp Automation Dashboard / Client Portal जैसा दिखाना होगा। Portfolio sections रह सकते हैं, लेकिन reviewer के लिए ये functional sections सबसे ज़रूरी हैं:
+
+Home / Hero
+
+“AI WhatsApp Automation for Businesses”
+
+CTA: “Connect WhatsApp”, “Book Demo”, “Login / Client Dashboard”
+
+Services
+
+WhatsApp AI Voice/Chat Agent
+
+Lead follow-up automation
+
+Appointment reminders
+
+WhatsApp template campaigns
+
+n8n workflow automation
+
+How it works
+
+Connect WhatsApp Business Account
+
+Select phone number
+
+Create/approve template
+
+Send automated message
+
+Track delivery
+
+Client Dashboard — यही review का मुख्य हिस्सा है
+
+Connect WhatsApp Business Account button
+
+WABA ID / Phone Number ID display
+
+Send Test Message form: recipient number + message text/template
+
+Message Templates section: list, create, delete
+
+Message status: sent / delivered / read / failed
+
+Webhook events/logs
+
+Trust pages
+
+Privacy Policy
+
+Terms of Service
+
+Contact page with real business email, phone, address
+
+About Anvayra
+
+Refund/cancellation policy अगर आप paid service दिखा रहे हो
+
+Meta review के लिए privacy policy, app category, app icon, primary contact और reviewer instructions जैसी app settings भी complete होनी चाहिए।
+
+1 घंटे का Fast Build Plan
+आपको पूरा custom backend नहीं बनाना। यह structure रखें:
+
+Frontend: आपका existing index.html + style.css, Vercel पर ही
+
+Backend: n8n Webhook workflows
+
+Database: अभी के लिए Google Sheets या n8n Data Tables — बाद में Supabase
+
+WhatsApp: Meta Cloud API
+
+Hosting: Vercel
+
+Frontend pages/files
+text
+/
+  index.html          -> public marketing site
+  dashboard.html      -> client WhatsApp dashboard
+  privacy.html
+  terms.html
+  contact.html
+  /css/style.css
+  /js/dashboard.js
+Dashboard में ये UI blocks रखें
+“Connect WhatsApp Business Account”
+
+“Connected Number”
+
+“Send Message”
+
+“Create Template”
+
+“Template List”
+
+“Delete Template”
+
+“Recent Messages / Logs”
+
+n8n workflows बनाएं
+आपका frontend सीधे Meta API को app secret नहीं भेजेगा। यह security के लिए गलत है। Frontend केवल आपके n8n webhook को call करेगा; n8n में Meta credentials सुरक्षित रहेंगे।
+
+Workflow 1: Send WhatsApp Message
+Frontend → n8n
+
+POST https://your-n8n-domain/webhook/whatsapp-send
+
+Request:
+
+json
+{
+  "to": "919999999999",
+  "message": "Hello Shivam, this is a test from Anvayra.",
+  "clientRef": "demo-client"
+}
+n8n flow:
+
+Webhook node
+
+Validate input
+
+HTTP Request node → Meta Graph API
+
+Save response/log
+
+Respond to Webhook
+
+Meta Cloud API send-text endpoint का structure:
+
+text
+POST https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages
+Body:
+
+json
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "919999999999",
+  "type": "text",
+  "text": {
+    "body": "Hello Shivam, this is a test from Anvayra."
+  }
+}
+Authorization header:
+
+text
+Authorization: Bearer {META_ACCESS_TOKEN}
+Workflow 2: Create Message Template
+Frontend → n8n
+
+POST /webhook/whatsapp-template-create
+
+Meta endpoint:
+
+text
+POST https://graph.facebook.com/v21.0/{WABA_ID}/message_templates
+Body example:
+
+json
+{
+  "name": "anvayra_demo_update",
+  "language": "en",
+  "category": "UTILITY",
+  "components": [
+    {
+      "type": "BODY",
+      "text": "Hello {{1}}, your Anvayra automation demo is ready."
+    }
+  ]
+}
+Workflow 3: List Templates
+text
+GET https://graph.facebook.com/v21.0/{WABA_ID}/message_templates
+Workflow 4: Delete Template
+text
+DELETE https://graph.facebook.com/v21.0/{WABA_ID}/message_templates?hsm_id={TEMPLATE_ID}
+whatsapp_business_management review के लिए आपके product में templates को read, create और delete करने का flow दिखाना चाहिए।
