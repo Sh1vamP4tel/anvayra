@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create workspace — Anvayra WhatsApp Workspace</title>
+  <meta name="description" content="Create your Anvayra workspace to connect WhatsApp Business accounts, manage a shared inbox and send approved templates.">
+  <meta name="theme-color" content="#f2e7d3">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/paper.css">
+  <link rel="stylesheet" href="../assets/css/workspace.css">
+</head>
+<body>
+
+  <div class="auth-page">
+    <aside class="auth-aside">
+      <a class="brand" href="../">
+        <img class="brand-mark" src="../assets/img/logo-mark.png" alt="">
+        Anvayra <small>automation studio</small>
+      </a>
+
+      <div>
+        <span class="eyebrow" style="color:rgba(250,244,231,.5);margin-bottom:0">Get started</span>
+        <h2>Your workspace, <em>live in two minutes.</em></h2>
+        <p>Create an account, connect a WhatsApp Business number with Meta Embedded Signup, and send your first message from the same screen.</p>
+
+        <ul class="auth-points">
+          <li><b>01</b><span>Connect an existing WhatsApp Business Account or a new Cloud API number.</span></li>
+          <li><b>02</b><span>Import approved templates and reply to customers from the shared inbox.</span></li>
+          <li><b>03</b><span>Disconnect and request deletion at any time — data removed within 7 days.</span></li>
+        </ul>
+      </div>
+
+      <p class="auth-quote">
+        “Built on the official WhatsApp Business Platform. No unofficial libraries, no number spoofing, no grey routes.”
+        <span>Platform note · Anvayra</span>
+      </p>
+    </aside>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <span class="legal-kicker">Create account</span>
+        <h1>Start your workspace</h1>
+        <p class="auth-sub">No card required. You can connect WhatsApp now or later from Settings.</p>
+
+        <span class="legal-kicker">Create account</span>
+        <h1>Start your workspace</h1>
+        <p class="auth-sub">No card required. You can connect WhatsApp now or later from Settings.</p>
+
+        <div class="auth-error" id="authError" role="alert"></div>
+
+        <div class="auth-social" style="display:grid;gap:10px;margin-bottom:18px">
+          <button type="button" id="googleBtn" class="gbtn" aria-label="Continue with Google">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.82-10.28 7.82-12.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.54.76-4.99l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 16.4-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.67 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Continue with Google
+          </button>
+          <div class="gbtn-divider"><span>or sign up with email</span></div>
+        </div>
+
+        <form id="signupForm" novalidate>
+          <div class="field">
+            <label for="name">Your name</label>
+            <input id="name" name="name" autocomplete="name" required placeholder="Full name">
+          </div>
+          <div class="field">
+            <label for="business">Business name</label>
+            <input id="business" name="business" autocomplete="organization" placeholder="Clinic, agency, store…">
+          </div>
+          <div class="field">
+            <label for="email">Work email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@business.com">
+          </div>
+          <div class="field">
+            <label for="password">Password (8+ characters)</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="Create a password">
+          </div>
+          <label class="consent" for="terms" style="margin:14px 0">
+            <input type="checkbox" id="terms" required>
+            <span>I agree to the <a href="../terms/">Terms of Service</a> and <a href="../privacy/">Privacy Policy</a>, and confirm I am authorised to connect the business numbers I add.</span>
+          </label>
+          <button class="btn btn--rust" type="submit" id="signupBtn">Create workspace <span class="arr">→</span></button>
+        </form>
+
+        <p class="auth-alt">Already have a workspace? <a href="../login/">Sign in</a></p>
+        <p class="auth-legal">Anvayra · Shivam Kushwah, sole proprietor · Sironj, Madhya Pradesh, India</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/auth.js"></script>
+  <style>
+    .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border:1px solid #d7c9b2;border-radius:8px;background:#fff;color:#3c4043;font:inherit;font-size:.92rem;font-weight:500;cursor:pointer}
+    .gbtn:hover{background:#f7f2e8}
+    .gbtn-divider{display:flex;align-items:center;gap:12px;color:rgba(43,33,23,.55);font-size:.78rem}
+    .gbtn-divider::before,.gbtn-divider::after{content:"";flex:1;height:1px;background:rgba(43,33,23,.18)}
+  </style>
+  <script>
+    (function () {
+      const form = document.getElementById('signupForm');
+      const errorBox = document.getElementById('authError');
+      const button = document.getElementById('signupBtn');
+      const googleBtn = document.getElementById('googleBtn');
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.add('show');
+      }
+
+      googleBtn.addEventListener('click', async function () {
+        errorBox.classList.remove('show');
+        googleBtn.disabled = true;
+        try {
+          await window.AnvayraAuth.signInWithGoogle();
+        } catch (error) {
+          showError(error.message || 'Google sign-in is unavailable right now.');
+          googleBtn.disabled = false;
+        }
+      });
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        errorBox.classList.remove('show');
+
+        const name = document.getElementById('name').value.trim();
+        const business = document.getElementById('business').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const accepted = document.getElementById('terms').checked;
+
+        if (!name || !email || !password) {
+          showError('Name, email and password are required.');
+          return;
+        }
+        if (password.length < 8) {
+          showError('Use a password of at least 8 characters.');
+          return;
+        }
+        if (!accepted) {
+          showError('Please accept the Terms and Privacy Policy to continue.');
+          return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = 'Creating workspace…';
+
+        try {
+          await window.AnvayraAuth.signup({ name, email, password, business });
+          window.location.href = '../dashboard/?welcome=1';
+        } catch (error) {
+          if (error.confirmationRequired) {
+            errorBox.innerHTML = 'Workspace created! We sent a confirmation link to <b>' +
+              email.replace(/</g, '&lt;') + '</b>. Open it to activate your workspace, then sign in.';
+            errorBox.classList.add('show');
+            button.innerHTML = 'Resend not needed — check your inbox';
+            return;
+          }
+          showError(error.message || 'Could not create the workspace.');
+          button.disabled = false;
+          button.innerHTML = 'Create workspace <span class="arr">→</span>';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspace — Anvayra WhatsApp Automation</title>
+  <meta name="description" content="Anvayra WhatsApp workspace: multiple Business accounts, shared inbox, templates, automations and live Cloud API delivery logs.">
+  <meta name="theme-color" content="#f2e7d3">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/paper.css">
+  <link rel="stylesheet" href="../assets/css/workspace.css">
+</head>
+<body class="ws-body">
+
+  <div class="ws">
+    <!-- ================= RAIL ================= -->
+    <aside class="ws-rail" id="rail">
+      <div class="ws-rail-head">
+        <a class="brand" href="../">
+          <img class="brand-mark" src="../assets/img/logo-mark.png" alt="">
+          Anvayra
+        </a>
+        <button class="ws-rail-close" id="railClose" aria-label="Close menu">✕</button>
+      </div>
+
+      <nav class="ws-nav" aria-label="Workspace">
+        <button type="button" data-view="inbox" class="active"><span class="ico">◧</span> Inbox <span class="count" id="inboxCount">0</span></button>
+        <button type="button" data-view="contacts"><span class="ico">☰</span> Contacts</button>
+        <button type="button" data-view="templates"><span class="ico">▤</span> Templates</button>
+        <button type="button" data-view="automations"><span class="ico">⚡</span> Automations</button>
+        <button type="button" data-view="settings"><span class="ico">⚙</span> Settings</button>
+      </nav>
+
+      <div class="ws-accounts">
+        <div class="ws-accounts-head">
+          <span>WhatsApp accounts</span>
+          <button type="button" id="addAccount" title="Connect another WhatsApp account" aria-label="Connect another WhatsApp account">+</button>
+        </div>
+        <div id="accountList"></div>
+      </div>
+
+      <div class="ws-rail-foot">
+        <div class="ws-user">
+          <span class="av" id="userAv">S</span>
+          <span class="meta">
+            <strong id="userName">—</strong>
+            <span id="userEmail">—</span>
+          </span>
+          <button type="button" id="logoutBtn" title="Sign out">Sign out</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <div class="ws-main">
+      <header class="ws-top">
+        <button class="ws-menu" id="wsMenu" aria-label="Open menu"><span></span><span></span><span></span></button>
+        <div class="ws-acc-title">
+          <h1><span id="accName">Workspace</span> <span class="ws-badge" id="accBadge">Cloud API</span></h1>
+          <p><span id="accNumber">—</span> · <span id="accStatusText">Connected</span></p>
+        </div>
+        <div class="ws-top-actions">
+          <button class="btn btn--ghost btn--sm" type="button" id="btnOpenSite">Website</button>
+          <button class="btn btn--rust btn--sm" type="button" id="btnConnect">Connect WhatsApp <span class="arr">→</span></button>
+        </div>
+      </header>
+
+      <div class="ws-views">
+        <!-- ============ INBOX ============ -->
+        <section class="ws-view active" data-view="inbox" id="viewInbox">
+          <div class="inbox" id="inboxEl">
+            <div class="thread-list">
+              <div class="thread-search">
+                <input id="threadSearch" type="search" placeholder="Search conversations…" aria-label="Search conversations">
+              </div>
+              <div class="threads" id="threadList"></div>
+            </div>
+
+            <div class="chat">
+              <div class="chat-head">
+                <button class="chat-back" id="chatBack" aria-label="Back to conversations">←</button>
+                <span class="av" id="chatAv">?</span>
+                <div>
+                  <strong id="chatName">Select a conversation</strong>
+                  <span id="chatNumber">—</span>
+                </div>
+                <div class="opts" id="chatOpts"></div>
+              </div>
+
+              <div class="chat-log" id="chatLog"></div>
+
+              <div class="composer">
+                <div class="composer-row">
+                  <textarea id="msgInput" rows="1" placeholder="Write a message…" aria-label="Message text"></textarea>
+                  <button class="btn btn--rust btn--sm send" type="button" id="sendBtn">Send <span class="arr">→</span></button>
+                </div>
+                <div class="composer-hint">
+                  <span id="composerHint">—</span>
+                  <span>Enter to send · Shift + Enter for a new line</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ CONTACTS ============ -->
+        <section class="ws-view" data-view="contacts" id="viewContacts">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Contacts</h2>
+                <p>People who have messaged this account. Opt-in status is stored with every contact; marketing messages are only sent to opted-in numbers.</p>
+              </div>
+              <span class="tag" id="contactCount">0 contacts</span>
+            </div>
+            <div class="panel-card" style="padding:0;overflow:auto">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Contact</th><th>Number</th><th>Last message</th><th>Consent</th><th></th></tr>
+                </thead>
+                <tbody id="contactsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ TEMPLATES ============ -->
+        <section class="ws-view" data-view="templates" id="viewTemplates">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Message templates</h2>
+                <p>Approved WhatsApp templates for this account. Templates must be approved by Meta before they can be sent outside the 24-hour customer service window.</p>
+              </div>
+              <span class="tag">Cloud API · utility</span>
+            </div>
+            <div class="tpl-grid" id="templateGrid"></div>
+          </div>
+        </section>
+
+        <!-- ============ AUTOMATIONS ============ -->
+        <section class="ws-view" data-view="automations" id="viewAutomations">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Automations</h2>
+                <p>Each switch maps to a workflow running against this WhatsApp account. Changes apply immediately to new conversations.</p>
+              </div>
+              <a class="btn btn--ghost btn--sm" href="../#services">How it works</a>
+            </div>
+            <div class="auto-grid" id="automationGrid"></div>
+          </div>
+        </section>
+
+        <!-- ============ SETTINGS ============ -->
+        <section class="ws-view" data-view="settings" id="viewSettings">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Account &amp; connection</h2>
+                <p>Connection values returned by Meta. Access tokens are stored only server-side in our encrypted token vault — never in this browser.</p>
+              </div>
+              <span class="tag" id="settingsStatus">Not connected</span>
+            </div>
+
+            <div class="panel-grid">
+              <div style="display:grid;gap:16px">
+                <div class="panel-card">
+                  <h3><span class="n">1</span> Connect WhatsApp Business</h3>
+                  <p class="sub">Opens Meta Embedded Signup for this workspace. Choose the business and phone number you want to manage.</p>
+                  <button class="btn btn--wa" type="button" id="settingsConnectBtn">Connect WhatsApp Business <span class="arr">→</span></button>
+                  <span class="status-line" id="connectStatus" style="display:block;margin-top:10px;font-size:.76rem;color:var(--ink-50)">Ready to connect.</span>
+                </div>
+
+                <div class="panel-card">
+                  <h3><span class="n">2</span> Connection details</h3>
+                  <p class="sub" id="accountTypeNote">Values are stored per account and used when sending a message.</p>
+                  <div class="field">
+                    <label for="inputPhoneId">Phone Number ID</label>
+                    <input id="inputPhoneId" inputmode="numeric" placeholder="e.g. 771234567890123" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label for="inputWaba">WhatsApp Business Account ID</label>
+                    <input id="inputWaba" inputmode="numeric" placeholder="e.g. 102938475610293" autocomplete="off">
+                  </div>
+                  <button class="btn btn--ghost btn--sm" type="button" id="saveAccountBtn">Save connection details</button>
+                  <div class="conn-grid" style="margin-top:14px">
+                    <div><span>Status</span><b id="connStatus">—</b></div>
+                    <div><span>WABA ID</span><b id="connWaba">—</b></div>
+                    <div><span>Phone Number ID</span><b id="connPhone">—</b></div>
+                    <div><span>Webhook</span><b id="connWebhook">Checking…</b></div>
+                    <div><span>Graph API</span><b>v21.0</b></div>
+                  </div>
+                  <button class="btn btn--ghost btn--sm" type="button" id="disconnectBtn" style="margin-top:10px">Disconnect this account</button>
+                </div>
+
+                <div class="panel-card">
+                  <h3>Profile</h3>
+                  <p class="sub">Shown to your team in this workspace.</p>
+                  <div class="field">
+                    <label for="profileName">Your name</label>
+                    <input id="profileName" autocomplete="name">
+                  </div>
+                  <div class="field">
+                    <label for="profileBusiness">Business name</label>
+                    <input id="profileBusiness" autocomplete="organization">
+                  </div>
+                  <button class="btn btn--ghost btn--sm" type="button" id="saveProfileBtn">Save profile</button>
+                </div>
+
+                <div class="panel-card danger-zone">
+                  <h3>Data deletion</h3>
+                  <p class="sub" style="color:#7a3a1f">Removing this workspace clears locally stored conversations, contacts and connection IDs from this browser. Server-side records are removed on request within 7 days.</p>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <a class="btn btn--ghost btn--sm" href="../data-deletion/">Deletion instructions</a>
+                    <button class="btn btn--sm" type="button" id="wipeLocalBtn" style="--btn-bg:#8a4426;--btn-fg:#fff3e6">Clear local workspace data</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid;gap:16px">
+                <div class="panel-card">
+                  <h3>Activity log</h3>
+                  <p class="sub">API calls and events for this session, newest first.</p>
+                  <div class="log-box" id="logBox">— no activity yet —</div>
+                  <div style="display:flex;gap:8px;margin-top:10px">
+                    <button class="btn btn--ghost btn--sm" type="button" id="clearLogBtn" style="width:auto">Clear log</button>
+                    <button class="btn btn--ghost btn--sm" type="button" id="healthBtn" style="width:auto">Check webhook</button>
+                  </div>
+                </div>
+
+                <div class="panel-card">
+                  <h3>Provider details</h3>
+                  <p class="sub">Identifiers used in our Meta app review submission.</p>
+                  <div class="conn-grid">
+                    <div><span>Legal entity</span><b>Shivam Kushwah · Anvayra</b></div>
+                    <div><span>Location</span><b>Sironj, Madhya Pradesh</b></div>
+                    <div><span>Meta App ID</span><b>1111754955165517</b></div>
+                    <div><span>Embedded Signup config</span><b>1469679065081628</b></div>
+                    <div><span>Backend</span><b>Supabase · private backend</b></div>
+                    <div><span>Support</span><b>shivamkushwahsironj@gmail.com</b></div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+                    <a class="btn btn--ghost btn--sm" href="../privacy/">Privacy</a>
+                    <a class="btn btn--ghost btn--sm" href="../terms/">Terms</a>
+                    <a class="btn btn--ghost btn--sm" href="../data-deletion/">Data deletion</a>
+                  </div>
+                </div>
+
+                <div class="panel-card">
+                  <h3>Reviewer note</h3>
+                  <p class="sub" style="margin-bottom:0">Inbox, contact consent, templates, automations and message sending are all reachable from the left rail. The real account sends through the WhatsApp Cloud API; the four demo accounts simulate replies so the review flow can be completed without messaging a real person.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="ws-toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/workspace.js"></script>
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank you — Anvayra</title>
+  <meta name="description" content="Your enquiry has been received by Anvayra.">
+  <meta name="theme-color" content="#f2e7d3">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/paper.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../"><img class="brand-mark" src="../assets/img/logo-mark.png" alt=""> Anvayra <small>automation studio</small></a>
+      <div class="nav-actions">
+        <a class="btn btn--sm" href="../">Back to website</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="thanks">
+    <div class="paper-card tape">
+      <div class="big-tick">✓</div>
+      <span class="eyebrow" style="justify-content:center">Enquiry received</span>
+      <h1>Thank you, <span id="visitorName">friend</span>.</h1>
+      <p>Your message is safely with us. We reply within <strong>48 hours</strong> on WhatsApp or email — usually sooner on business days. Nothing else is needed from you right now.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:24px">
+        <a class="btn btn--rust" href="https://wa.me/919165826867" target="_blank" rel="noopener">Chat on WhatsApp <span class="arr">→</span></a>
+        <a class="btn btn--ghost" href="../dashboard/">Explore the dashboard</a>
+      </div>
+      <p class="small muted" style="margin-bottom:0">Prefer email? <a href="mailto:shivamkushwahsironj@gmail.com">shivamkushwahsironj@gmail.com</a> · <a href="tel:+919165826867">+91 91658 26867</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom" style="border-top:0;padding-top:0">
+        <span class="legal-name">© 2026 Anvayra · Operated by Shivam Kushwah, sole proprietor</span>
+        <span><a href="../privacy/">Privacy</a> · <a href="../terms/">Terms</a> · <a href="../data-deletion/">Data Deletion</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
+    if (name) document.getElementById('visitorName').textContent = name.split(' ')[0];
+  </script>
+</body>
+</html>

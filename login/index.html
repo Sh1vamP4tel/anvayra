@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — Anvayra WhatsApp Workspace</title>
+  <meta name="description" content="Sign in to the Anvayra WhatsApp automation workspace: multiple WhatsApp Business accounts, shared inbox, templates and delivery logs.">
+  <meta name="theme-color" content="#f2e7d3">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/paper.css">
+  <link rel="stylesheet" href="../assets/css/workspace.css">
+</head>
+<body>
+
+  <div class="auth-page">
+    <aside class="auth-aside">
+      <a class="brand" href="../">
+        <img class="brand-mark" src="../assets/img/logo-mark.png" alt="">
+        Anvayra <small>automation studio</small>
+      </a>
+
+      <div>
+        <span class="eyebrow" style="color:rgba(250,244,231,.5);margin-bottom:0">Client workspace</span>
+        <h2>Every WhatsApp account, <em>one calm inbox.</em></h2>
+        <p>Sign in to manage your WhatsApp Business accounts, reply to customers, send approved templates and watch delivery events arrive from the Cloud API in real time.</p>
+
+        <ul class="auth-points">
+          <li><b>01</b><span>Multiple WABA numbers in one workspace, switched in a click.</span></li>
+          <li><b>02</b><span>Messages sent through the official WhatsApp Cloud API — never a browser shortcut.</span></li>
+          <li><b>03</b><span>Access tokens stay server-side in our encrypted backend. The browser never receives them.</span></li>
+        </ul>
+      </div>
+
+      <p class="auth-quote">
+        “An agent that sounds good in a demo and one that holds up on a real customer chat are two very different things.”
+        <span>Shivam Kushwah · Founder, Anvayra</span>
+      </p>
+    </aside>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <span class="legal-kicker">Welcome back</span>
+        <h1>Sign in</h1>
+        <p class="auth-sub">Use your workspace email and password, or continue with Google.</p>
+
+        <div class="auth-error" id="authError" role="alert"></div>
+
+        <div class="auth-social" style="display:grid;gap:10px;margin-bottom:18px">
+          <button type="button" id="googleBtn" class="gbtn" aria-label="Continue with Google">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.82-10.28 7.82-12.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.54.76-4.99l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 16.4-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.67 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Continue with Google
+          </button>
+          <div class="gbtn-divider"><span>or</span></div>
+        </div>
+
+        <div class="auth-demo" id="reviewerDemo" hidden>
+          <b>Reviewer demo access</b><br>
+          Email <code>demo@anvayra.app</code> · Password <code>anvayra2026</code><br>
+          <button type="button" id="fillDemo" style="margin-top:8px;background:none;border:0;padding:0;color:#8a4426;font:inherit;font-weight:600;cursor:pointer;text-decoration:underline">Fill demo credentials →</button>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@business.com">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+          </div>
+          <button class="btn btn--rust" type="submit" id="loginBtn">Sign in to workspace <span class="arr">→</span></button>
+        </form>
+
+        <p class="auth-alt">New here? <a href="../signup/">Create a workspace</a> · <a href="../">Back to website</a></p>
+        <p class="auth-legal">By signing in you accept our <a href="../terms/">Terms</a> and <a href="../privacy/">Privacy Policy</a>.<br>Anvayra · Shivam Kushwah, sole proprietor · Sironj, Madhya Pradesh, India</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/auth.js"></script>
+  <style>
+    .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border:1px solid #d7c9b2;border-radius:8px;background:#fff;color:#3c4043;font:inherit;font-size:.92rem;font-weight:500;cursor:pointer}
+    .gbtn:hover{background:#f7f2e8}
+    .gbtn-divider{display:flex;align-items:center;gap:12px;color:rgba(43,33,23,.55);font-size:.78rem}
+    .gbtn-divider::before,.gbtn-divider::after{content:"";flex:1;height:1px;background:rgba(43,33,23,.18)}
+  </style>
+  <script>
+    (function () {
+      const form = document.getElementById('loginForm');
+      const errorBox = document.getElementById('authError');
+      const button = document.getElementById('loginBtn');
+      const googleBtn = document.getElementById('googleBtn');
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || 'dashboard';
+
+      /* Reviewer demo box only appears with ?reviewer=1 — out of the public
+         page, but linkable in the App Review notes. */
+      if (params.get('reviewer')) document.getElementById('reviewerDemo').hidden = false;
+
+      document.getElementById('fillDemo').addEventListener('click', function () {
+        document.getElementById('email').value = window.AnvayraAuth.demo.email;
+        document.getElementById('password').value = window.AnvayraAuth.demo.password;
+        document.getElementById('password').focus();
+      });
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.add('show');
+      }
+
+      googleBtn.addEventListener('click', async function () {
+        errorBox.classList.remove('show');
+        googleBtn.disabled = true;
+        try {
+          await window.AnvayraAuth.signInWithGoogle();
+          /* Browser redirects to Google and back; nothing else to do here. */
+        } catch (error) {
+          showError(error.message || 'Google sign-in is unavailable right now.');
+          googleBtn.disabled = false;
+        }
+      });
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        errorBox.classList.remove('show');
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+          showError('Enter your email and password to continue.');
+          return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = 'Signing in…';
+
+        try {
+          await window.AnvayraAuth.login(email, password);
+          const safeNext = /^[a-z0-9._/-]+$/i.test(next) ? next : 'dashboard';
+          window.location.href = '../' + String(safeNext).replace(/^\/+/, '');
+        } catch (error) {
+          showError(error.message || 'Could not sign in. Please try again.');
+          button.disabled = false;
+          button.innerHTML = 'Sign in to workspace <span class="arr">→</span>';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

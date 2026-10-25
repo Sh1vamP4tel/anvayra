@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /docs/
+Disallow: /dashboard/
+Disallow: /login/
+Disallow: /signup/
+Disallow: /thank-you/
+Disallow: /deletion-status/
+
+Sitemap: https://anvayra.vercel.app/sitemap.xml

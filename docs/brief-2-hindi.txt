@@ -35,10 +35,3 @@ Webhook: Embedded Signup token exchange, jo code ko access token mein badalta ha
 Lead storage (Google Sheets ya koi DB) jo form submissions aur consent save kare.
 
 Website ko n8n webhook ko secret header ke saath call karna chahiye, taaki koi bhi bahar se seedha hit na kar sake.
-
-3. Meta par kya-kya submit karna hai
-
-Business Verification: legal business name, address, website URL, aur business documents (GST, registration ya utility bill). Freelancer ke liye sole proprietor documents mein dikkat aa sakti hai, isliye pehle check karo ki aapke paas kaun se documents available hain.
-App Settings: Privacy Policy URL, Terms URL, Data Deletion URL, app icon (1024x1024), category, aur contact email.
-App Review: har permission (jaise whatsapp_business_messaging, whatsapp_business_management) ke liye use-case description aur screen recording.
-Reviewer instructions: test steps, test login, aur test WhatsApp number. Reviewer ko app ko actually use karne ka tareeka chahiye, warna reject ho jaata hai.

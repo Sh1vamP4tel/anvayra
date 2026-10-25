@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deletion Status — Anvayra</title>
+  <meta name="description" content="Check the status of your Anvayra data deletion request.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f2e7d3">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/paper.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../index.html"><img class="brand-mark" src="../assets/img/logo-mark.png" alt=""> Anvayra <small>automation studio</small></a>
+      <nav class="nav-links" aria-label="Legal navigation">
+        <a href="../index.html">Home</a>
+        <a href="../privacy/index.html">Privacy</a>
+        <a href="../terms/index.html">Terms</a>
+        <a href="../dashboard/">Dashboard</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn--sm" href="../dashboard/">Connect WhatsApp</a>
+        <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="../index.html">Home</a>
+    <a href="../privacy/index.html">Privacy Policy</a>
+    <a href="../terms/index.html">Terms of Service</a>
+    <a href="../dashboard/">Client dashboard</a>
+  </div>
+
+  <main class="legal-page">
+    <div class="wrap" style="max-width:720px">
+      <span class="legal-kicker">Your data · Trust centre</span>
+      <h1>Deletion <em class="serif-em">Status</em></h1>
+
+      <div class="legal-body" id="statusBody">
+        <div class="legal-callout">
+          <p><strong>Checking your request…</strong></p>
+          <p id="statusText">Loading the status of your data deletion request.</p>
+        </div>
+        <p style="margin-top:14px">Need to start a new request? Use the <a href="../data-deletion/">data deletion page</a> or email <a href="mailto:shivamkushwahsironj@gmail.com?subject=Delete%20My%20Data">shivamkushwahsironj@gmail.com</a> with the subject <strong>“Delete My Data”</strong>.</p>
+      </div>
+
+      <div style="margin-top:32px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn--rust" href="../data-deletion/">Data Deletion page <span class="arr">→</span></a>
+        <a class="btn btn--ghost btn--sm" href="../privacy/index.html">Privacy Policy</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom" style="border-top:0;padding-top:0">
+        <span class="legal-name">© 2026 Anvayra · Operated by Shivam Kushwah, sole proprietor · Sironj, Madhya Pradesh, India</span>
+        <span><a href="../privacy/index.html">Privacy</a> · <a href="../terms/index.html">Terms</a> · <a href="../data-deletion/index.html">Data Deletion</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+      var body = document.getElementById('statusBody');
+      var text = document.getElementById('statusText');
+      var params = new URLSearchParams(window.location.search);
+      var code = (params.get('code') || '').trim();
+
+      if (!code) {
+        body.innerHTML = '';
+        var wrap = document.createElement('div');
+        wrap.className = 'legal-callout';
+        wrap.innerHTML = '<p><strong>No confirmation code found.</strong></p><p>Open the link Meta sent you, or enter your confirmation code on the <a href="../data-deletion/">data deletion page</a>.</p>';
+        body.appendChild(wrap);
+        text && (text.textContent = '');
+        return;
+      }
+
+      var endpoint = 'https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/data-deletion?code=' +
+        encodeURIComponent(code);
+
+      fetch(endpoint)
+        .then(function (res) {
+          if (res.status === 404) {
+            text.textContent = 'We could not find a deletion request with that code. It may have already been permanently removed, or the code is incorrect.';
+            return null;
+          }
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          if (!data) return;
+          if (data.status === 'completed') {
+            text.textContent = 'Your data has been deleted. Thank you — this request is complete.';
+          } else {
+            text.textContent = 'Your deletion request is pending. Confirmation received on ' +
+              new Date(data.requested_at).toLocaleString() + '. We will complete it within 30 days and email you a confirmation.';
+          }
+        })
+        .catch(function () {
+          text.textContent = 'We could not check the status right now. Please try again in a moment, or email shivamkushwahsironj@gmail.com with the subject “Delete My Data”.';
+        });
+    })();
+  </script>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>
