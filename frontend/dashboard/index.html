@@ -11,8 +11,53 @@
   <link rel="stylesheet" href="../assets/css/fonts.css">
   <link rel="stylesheet" href="../assets/css/paper.css">
   <link rel="stylesheet" href="../assets/css/workspace.css">
+  <style>
+    /* Auth gate: the workspace stays hidden until the session is confirmed,
+       so an unauthenticated visitor never sees protected UI (no flash). */
+    body:not(.auth-ready) .ws { visibility: hidden !important; }
+    #authSplash { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center;
+      justify-content: center; flex-direction: column; gap: 14px; background: #f2e7d3;
+      color: #5a4a35; font-family: "DM Sans", system-ui, -apple-system, sans-serif; font-size: .95rem; }
+    #authSplash .spin { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(138, 68, 38, .18);
+      border-top-color: #8a4426; animation: authspin .85s linear infinite; }
+    @keyframes authspin { to { transform: rotate(360deg); } }
+    html.auth-redirect #authSplash { display: none !important; }
+  </style>
+  <script>
+    /* Decide before the page paints. If there is no stored session (and this is
+       not an OAuth / email-confirmation landing), leave immediately so the
+       dashboard never flashes. If a session exists, the splash shows while
+       workspace.js validates it server-side. */
+    (function () {
+      var signedIn = false;
+      try {
+        var raw = localStorage.getItem('anvayra.auth.v2');
+        var s = raw && JSON.parse(raw);
+        signedIn = !!(s && (s.access_token || s.refresh_token));
+      } catch (e) { signedIn = false; }
+      var landing = /(?:^|[#&])(access_token|refresh_token|error|error_description|code)=/.test(location.hash) ||
+                    /[?&](code|error|error_description)=/.test(location.search);
+      if (!signedIn && !landing) {
+        document.documentElement.className += ' auth-redirect';
+        location.replace('../login/?next=dashboard');
+        return;
+      }
+      /* If auth never resolves (blocked CDN, broken script), never trap the user
+         on a blank screen — fall back to the login page. */
+      setTimeout(function () {
+        if (!document.body.classList.contains('auth-ready')) {
+          location.replace('../login/?next=dashboard');
+        }
+      }, 8000);
+    })();
+  </script>
 </head>
 <body class="ws-body">
+
+  <div id="authSplash" role="status" aria-live="polite">
+    <span class="spin" aria-hidden="true"></span>
+    <span>Checking your session…</span>
+  </div>
 
   <div class="ws">
     <!-- ================= RAIL ================= -->

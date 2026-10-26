@@ -15,6 +15,11 @@
   const session = await window.AnvayraAuth.requireSession();
   if (!session) return;
 
+  /* Session confirmed — reveal the workspace and drop the checking splash. */
+  document.body.classList.add('auth-ready');
+  const authSplash = document.getElementById('authSplash');
+  if (authSplash) authSplash.remove();
+
   /* ---------------------------------------------------------------------- */
   /*  Config                                                                */
   /* ---------------------------------------------------------------------- */

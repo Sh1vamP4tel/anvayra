@@ -172,22 +172,34 @@ window.AnvayraAuth = (function () {
   }
 
   /* ---------- social ---------- */
+  function oauthRedirect() {
+    /* Post-login destination. Supabase must have this origin in Auth → URL
+       Configuration → Redirect URLs, and Site URL must be the production
+       domain, otherwise GoTrue falls back to Site URL (often localhost:3000). */
+    const origin = /^https?:$/.test(window.location.protocol)
+      ? window.location.origin
+      : 'https://anvayra.vercel.app';
+    return origin + '/dashboard/';
+  }
+
   async function signInWithGoogle() {
     if (!client) throw new Error('Authentication is not available right now.');
-    const { error } = await client.auth.signInWithOAuth({
+    const { data, error } = await client.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/dashboard/' }
+      options: { redirectTo: oauthRedirect(), queryParams: { prompt: 'select_account' } }
     });
     if (error) throw authError(error.message);
+    return data;
   }
 
   async function signInWithFacebook() {
     if (!client) throw new Error('Authentication is not available right now.');
-    const { error } = await client.auth.signInWithOAuth({
+    const { data, error } = await client.auth.signInWithOAuth({
       provider: 'facebook',
-      options: { redirectTo: window.location.origin + '/dashboard/' }
+      options: { redirectTo: oauthRedirect() }
     });
     if (error) throw authError(error.message);
+    return data;
   }
 
   /* ---------- session lifecycle ---------- */
