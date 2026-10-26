@@ -35,6 +35,36 @@ window.AnvayraAuth = (function () {
     console.error('[AnvayraAuth] supabase-js failed to load. Check network / CDN access.');
   }
 
+  /* Optional: authoritative server-side session confirmation via the Express
+     backend. When the backend is deployed, set this URL (e.g.
+     "https://api.example.com/api/auth/session"). If it is empty, the dashboard
+     trusts the Supabase session directly (still validated by Supabase getUser).
+     This hook never blocks or breaks the app: a network error or timeout keeps
+     the Supabase session; only an explicit server "authenticated:false" (token
+     revoked server-side) forces a sign-out. */
+  const SERVER_SESSION_URL = (window.AnvayraServerSessionUrl || '').replace(/\/+$/, '');
+
+  async function serverConfirms(token) {
+    if (!SERVER_SESSION_URL) return { confirmed: true };
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4000);
+    try {
+      const r = await fetch(SERVER_SESSION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token || '' }),
+        signal: ctrl.signal
+      });
+      const data = await r.json().catch(() => ({}));
+      if (data && data.authenticated === false) return { confirmed: false };
+      return { confirmed: true };
+    } catch (_) {
+      return { confirmed: true }; // network/timeout -> trust Supabase
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   /* Reviewer demo account (provisioned server-side in Supabase Auth) */
   const DEMO = {
     name: 'Shivam Kushwah',
@@ -90,6 +120,14 @@ window.AnvayraAuth = (function () {
       if (error && !/missing|401|session/i.test(error.message || '')) {
         console.warn('[AnvayraAuth] getSession:', error.message);
       }
+      return null;
+    }
+
+    /* Optional server-side confirmation (see SERVER_SESSION_URL above). */
+    const sess = await client.auth.getSession().then((s) => s && s.data && s.data.session).catch(() => null);
+    const verdict = await serverConfirms(sess && sess.access_token);
+    if (!verdict.confirmed) {
+      try { await client.auth.signOut(); } catch (_) { /* ignore */ }
       return null;
     }
 

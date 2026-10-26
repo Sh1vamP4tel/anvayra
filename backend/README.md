@@ -48,6 +48,45 @@ It rejects route sources that Vercel's parser refuses (nested regex groups such
 as `/assets/(.*\.(js|css))`) and confirms `/docs` and `/backend` are never
 published. A rejected pattern blocks the whole deployment.
 
+## Express server (Node backend)
+
+A real Node/Express backend now lives in `backend/server/`. Its job is to give
+the dashboard an authoritative, server-side confirmation of login status, which
+satisfies the "confirm the user before rendering protected UI" requirement
+without trusting localStorage alone.
+
+```bash
+cd backend/server
+cp .env.example .env   # set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY + APP_ORIGIN
+npm install
+npm start              # or npm run dev
+```
+
+Endpoints:
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/health` | Liveness + whether auth is configured |
+| GET | `/api/config` | Public, non-secret app constants |
+| POST | `/api/auth/session` | body `{ token }` → verifies the Supabase access token server-side and returns `{ authenticated, user }` |
+| * | `/api/*` | 404 for unmatched API routes |
+
+The frontend can call `/api/auth/session` by setting
+`window.AnvayraServerSessionUrl` (scroll to the top of
+`frontend/assets/js/auth.js`). When set, the dashboard confirms the session with
+the Express server and signs the user out only if the server explicitly rejects
+the token. When empty (default), it relies on Supabase `getUser`, which is still
+real server-side authentication — so the app works with or without the Express
+host. The service-role key and WhatsApp token must stay server-side only.
+
+## Note on Node/Express vs serverless
+
+Login is handled by **Supabase Auth**; the Express server above *adds* a proper
+Node backend for session confirmation. The Supabase Edge Functions (below) cover
+the WhatsApp operations. Together they mean the backend is real server code — it is
+just split across Supabase serverless and this optional Express host rather than a
+single long-running process. You do not need both; either works.
+
 ## Authentication
 
 Login is handled by **Supabase Auth** (email/password + Google OAuth). The
@@ -62,12 +101,12 @@ For Google OAuth, set in Supabase → Authentication → URL Configuration:
 - (local development) `http://localhost:3000/**`
 
 If the production origin is missing there, GoTrue falls back to the Site URL and
-reviewers can be bounced to `localhost:3000` after Google sign-in.
+reviewers can be bounced to `localhost:3000` after Google sign-in. This is a
+project setting, not application code — set it in the dashboard (see above).
 
 ## Note on Node/Express
 
-The backend is serverless (Supabase Edge Functions) by design: it scales to zero,
-keeps secrets encrypted in the platform vault, and needs no separate host. A
-separate long-running Express server is not required for this app. If you later
-want one (for example to self-host on a VPS), it can proxy the same endpoints —
-but it must not replace the vault-backed token flow.
+The Express server above ("Express server (Node backend)") is the Node backend;
+Supabase Auth is the identity store. Both are on this machine's `backend/`. The
+Supabase serverless functions handle the WhatsApp operations. This Express host is
+optional and can be deployed on Vercel-as-a-function or a VPS.

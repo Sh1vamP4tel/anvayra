@@ -503,3 +503,13 @@ immutable JS cannot keep serving the unguarded version.
    (`health` currently reports both as `false`).
 3. Set the Meta Data Deletion callback and webhook URLs.
 4. Confirm the final production domain.
+
+### Express backend (Node)
+
+Per the user's request, a real Node/Express backend now lives in
+`backend/server/` (`src/index.js`). It adds an authoritative session check —
+`POST /api/auth/session` verifies the Supabase access token server-side with the
+service-role key and returns `{ authenticated, user }`. The frontend can opt in
+by setting `window.AnvayraServerSessionUrl` in `frontend/assets/js/auth.js`;
+when unset it relies on Supabase `getUser` (still server-side auth). The Express
+host is optional and documented in `backend/README.md`.
