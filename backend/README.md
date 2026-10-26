@@ -35,6 +35,19 @@ the Supabase project (migrations are tracked outside this folder).
 | `META_APP_ID` | `1111754955165517` |
 | `GRAPH_VERSION` | `v21.0` (optional; defaults to v21.0) |
 
+## Deploy checks
+
+Vercel publishes `frontend/` through `vercel.json` (`buildCommand` → `dist/`).
+Before pushing a change to `vercel.json`, run:
+
+```bash
+node scripts/check-vercel-routes.mjs
+```
+
+It rejects route sources that Vercel's parser refuses (nested regex groups such
+as `/assets/(.*\.(js|css))`) and confirms `/docs` and `/backend` are never
+published. A rejected pattern blocks the whole deployment.
+
 ## Authentication
 
 Login is handled by **Supabase Auth** (email/password + Google OAuth). The

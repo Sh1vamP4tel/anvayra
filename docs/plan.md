@@ -385,3 +385,121 @@ Dashboard → your project → Edge Functions → **Secrets**, or `supabase secr
 Replace the localStorage workspace model with live Supabase data (accounts, threads,
 messages, realtime), wire `wa-send`/`wa-connect` to real DB account IDs + workspace
 membership, then P5 Embedded Signup end-to-end.
+
+---
+
+## 11 · P3.5 — Auth flash fix, frontend/backend split, deploy repair (26 Oct 2026)
+
+### Reported symptoms
+
+1. Clicking **Open dashboard** showed the workspace for 0.3–4 ms, then redirected to `/login/`.
+   App Review rejects protected content being visible before authentication.
+2. **Continue with Google** ended up at `localhost:3000` instead of the live site.
+
+### Cause 1 — protected UI painted before the session was checked
+
+`dashboard/index.html` shipped the whole workspace markup. The auth guard lived in
+`workspace.js`, which runs only after the document is parsed and `requireSession()`
+resolves. Every unauthenticated visit therefore painted protected UI, then navigated.
+
+### Fix 1 — decide before first paint
+
+- `frontend/dashboard/index.html` now has an inline gate in `<head>`:
+  - reads the stored session key `anvayra.auth.v2`;
+  - if there is no session and the URL is not an OAuth / magic-link landing
+    (`access_token|refresh_token|error|error_description|code`), it calls
+    `location.replace('../login/?next=dashboard')` **before** `<body>` exists;
+  - if a session exists it shows a full-screen “Checking your session…” splash.
+- CSS keeps `.ws` at `visibility: hidden` until `body.auth-ready` is set.
+- `frontend/assets/js/workspace.js` adds `auth-ready` and removes the splash only
+  after `requireSession()` returns a validated session.
+- 8-second safety net: if auth never resolves (CDN blocked), redirect to login
+  instead of trapping the user on a blank page.
+
+**Verified on production** (`https://anvayra.vercel.app`):
+
+| Scenario | Result |
+| --- | --- |
+| Signed out → `/dashboard` | ends on `/login?next=dashboard`, `.ws` never exists in the DOM |
+| Signed in → `/dashboard` | splash → workspace, `auth-ready` true, name populated |
+| First paint for signed-out | no workspace markup, so nothing to flash |
+
+### Cause 2 — Google OAuth fell back to Site URL
+
+`auth.js` already sent `redirect_to=https://anvayra.vercel.app/dashboard/`, but
+GoTrue only honours a `redirect_to` that is in the project's allowed list.
+Proof from the auth schema after starting a real authorize request:
+
+```
+select referrer from auth.flow_state order by created_at desc;
+-- google flow requested with https://anvayra.vercel.app/dashboard/
+-- stored referrer: http://localhost:3000
+```
+
+GoTrue silently replaced the production URL with **Site URL** (`http://localhost:3000`)
+because it was not allow-listed. This is a project setting, not application code —
+no MCP tool exposes it, so it must be set in the dashboard (see below).
+
+### Fix 2 — app side
+
+`auth.js` gained `oauthRedirect()`: it always derives the destination from the
+current origin (`https://anvayra.vercel.app/dashboard/` in production, the local
+origin in development) and passes `queryParams.prompt=select_account`. The
+server-side allow-list still has to match; the app cannot override it.
+
+**Required dashboard setting** (Supabase → Authentication → URL Configuration):
+
+- Site URL: `https://anvayra.vercel.app`
+- Redirect URLs: `https://anvayra.vercel.app/**` and `http://localhost:3000/**`
+
+### Repository layout
+
+```
+frontend/                     static site published by Vercel
+  index.html  dashboard/  login/  signup/  privacy/  terms/
+  data-deletion/  deletion-status/  thank-you/  404.html
+  assets/{css,js,img,fonts}/
+backend/
+  supabase/functions/         wa-webhook, wa-send, wa-connect, wa-lead,
+                              data-deletion, health
+  README.md                   secrets, auth, deploy notes
+docs/                         planning only — never published
+vercel.json                   builds frontend/ into dist/
+```
+
+`vercel.json` runs `buildCommand: rm -rf dist && mkdir -p dist && cp -r frontend/. dist/`
+with `outputDirectory: dist`. `/docs/**` rewrites to `404.html`, and live checks
+confirm `/docs/plan.md` and `/backend/README.md` both return 404.
+
+### Deploy incident — invalid route source pattern
+
+The first two pushes failed to deploy. Vercel reported
+`invalid-route-source-pattern`; GitHub status on both commits was `failure`.
+Cause: cache rules used **nested regex groups**, which Vercel's path-to-regexp
+parser rejects:
+
+```
+/assets/(.*\.(js|css))          <- invalid (nested capturing groups)
+```
+
+Fixed by using one non-nested rule per asset directory:
+
+```
+/assets/js/(.*)      -> public, max-age=0, must-revalidate
+/assets/css/(.*)     -> public, max-age=0, must-revalidate
+/assets/img/(.*)     -> public, max-age=31536000, immutable
+/assets/fonts/(.*)   -> public, max-age=31536000, immutable
+```
+
+The corrected rules were validated with `@vercel/routing-utils`
+(`getTransformedRoutes` → valid) before pushing, and the commit deployed green.
+Inline CSS/JS URLs also carry `?v=20261026`, so browsers that cached the old
+immutable JS cannot keep serving the unguarded version.
+
+### Still pending (user actions)
+
+1. Set Site URL + Redirect URLs as above (fixes Google → `localhost:3000`).
+2. Set Edge Function secrets: `META_APP_SECRET`, `WHATSAPP_SYSTEM_USER_TOKEN`
+   (`health` currently reports both as `false`).
+3. Set the Meta Data Deletion callback and webhook URLs.
+4. Confirm the final production domain.
