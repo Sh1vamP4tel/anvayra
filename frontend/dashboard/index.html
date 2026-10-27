@@ -8,9 +8,9 @@
   <meta name="theme-color" content="#f2e7d3">
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="../assets/css/fonts.css?v=20261026">
-  <link rel="stylesheet" href="../assets/css/paper.css?v=20261026">
-  <link rel="stylesheet" href="../assets/css/workspace.css?v=20261026">
+  <link rel="stylesheet" href="../assets/css/fonts.css?v=20261027">
+  <link rel="stylesheet" href="../assets/css/paper.css?v=20261027">
+  <link rel="stylesheet" href="../assets/css/workspace.css?v=20261027">
   <style>
     /* Auth gate: the workspace stays hidden until the session is confirmed,
        so an unauthenticated visitor never sees protected UI (no flash). */
@@ -179,7 +179,10 @@
                 <h2>Message templates</h2>
                 <p>Approved WhatsApp templates for this account. Templates must be approved by Meta before they can be sent outside the 24-hour customer service window.</p>
               </div>
-              <span class="tag">Cloud API · utility</span>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <button class="btn btn--ghost btn--sm" type="button" id="syncTemplatesBtn">Sync from WhatsApp</button>
+                <span class="tag">Cloud API · utility</span>
+              </div>
             </div>
             <div class="tpl-grid" id="templateGrid"></div>
           </div>
@@ -190,8 +193,8 @@
           <div class="panel">
             <div class="panel-head">
               <div>
-                <h2>Automations</h2>
-                <p>Each switch maps to a workflow running against this WhatsApp account. Changes apply immediately to new conversations.</p>
+                <h2>Automation preferences</h2>
+                <p>Preferences stored per WhatsApp account. They record which behaviours your team wants switched on; they do not send messages by themselves.</p>
               </div>
               <a class="btn btn--ghost btn--sm" href="../#services">How it works</a>
             </div>
@@ -221,24 +224,16 @@
 
                 <div class="panel-card">
                   <h3><span class="n">2</span> Connection details</h3>
-                  <p class="sub" id="accountTypeNote">Values are stored per account and used when sending a message.</p>
-                  <div class="field">
-                    <label for="inputPhoneId">Phone Number ID</label>
-                    <input id="inputPhoneId" inputmode="numeric" placeholder="e.g. 771234567890123" autocomplete="off">
-                  </div>
-                  <div class="field">
-                    <label for="inputWaba">WhatsApp Business Account ID</label>
-                    <input id="inputWaba" inputmode="numeric" placeholder="e.g. 102938475610293" autocomplete="off">
-                  </div>
-                  <button class="btn btn--ghost btn--sm" type="button" id="saveAccountBtn">Save connection details</button>
-                  <div class="conn-grid" style="margin-top:14px">
+                  <p class="sub" id="accountTypeNote">Connection values are written by WhatsApp Embedded Signup and stored server-side.</p>
+                  <div class="conn-grid">
                     <div><span>Status</span><b id="connStatus">—</b></div>
+                    <div><span>Business</span><b id="connBusiness">—</b></div>
                     <div><span>WABA ID</span><b id="connWaba">—</b></div>
                     <div><span>Phone Number ID</span><b id="connPhone">—</b></div>
                     <div><span>Webhook</span><b id="connWebhook">Checking…</b></div>
                     <div><span>Graph API</span><b>v21.0</b></div>
                   </div>
-                  <button class="btn btn--ghost btn--sm" type="button" id="disconnectBtn" style="margin-top:10px">Disconnect this account</button>
+                  <button class="btn btn--ghost btn--sm" type="button" id="disconnectBtn" style="margin-top:12px">Disconnect this account</button>
                 </div>
 
                 <div class="panel-card">
@@ -257,10 +252,10 @@
 
                 <div class="panel-card danger-zone">
                   <h3>Data deletion</h3>
-                  <p class="sub" style="color:#7a3a1f">Removing this workspace clears locally stored conversations, contacts and connection IDs from this browser. Server-side records are removed on request within 7 days.</p>
+                  <p class="sub" style="color:#7a3a1f">You can request deletion of your workspace and its server-side records at any time. Requests are completed within 7 days, and the confirmation code lets you track the status.</p>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <a class="btn btn--ghost btn--sm" href="../data-deletion/">Deletion instructions</a>
-                    <button class="btn btn--sm" type="button" id="wipeLocalBtn" style="--btn-bg:#8a4426;--btn-fg:#fff3e6">Clear local workspace data</button>
+                    <a class="btn btn--ghost btn--sm" href="../deletion-status/">Check a request</a>
                   </div>
                 </div>
               </div>
@@ -268,23 +263,22 @@
               <div style="display:grid;gap:16px">
                 <div class="panel-card">
                   <h3>Activity log</h3>
-                  <p class="sub">API calls and events for this session, newest first.</p>
+                  <p class="sub">Workspace events recorded by the backend, newest first.</p>
                   <div class="log-box" id="logBox">— no activity yet —</div>
                   <div style="display:flex;gap:8px;margin-top:10px">
-                    <button class="btn btn--ghost btn--sm" type="button" id="clearLogBtn" style="width:auto">Clear log</button>
+                    <button class="btn btn--ghost btn--sm" type="button" id="clearLogBtn" style="width:auto">Refresh log</button>
                     <button class="btn btn--ghost btn--sm" type="button" id="healthBtn" style="width:auto">Check webhook</button>
                   </div>
                 </div>
 
                 <div class="panel-card">
                   <h3>Provider details</h3>
-                  <p class="sub">Identifiers used in our Meta app review submission.</p>
+                  <p class="sub">Business and platform information for this workspace.</p>
                   <div class="conn-grid">
                     <div><span>Legal entity</span><b>Shivam Kushwah · Anvayra</b></div>
                     <div><span>Location</span><b>Sironj, Madhya Pradesh</b></div>
-                    <div><span>Meta App ID</span><b>1111754955165517</b></div>
-                    <div><span>Embedded Signup config</span><b>1469679065081628</b></div>
-                    <div><span>Backend</span><b>Supabase · private backend</b></div>
+                    <div><span>Platform</span><b>WhatsApp Cloud API</b></div>
+                    <div><span>Data region</span><b>Encrypted cloud backend</b></div>
                     <div><span>Support</span><b>shivamkushwahsironj@gmail.com</b></div>
                   </div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -292,11 +286,6 @@
                     <a class="btn btn--ghost btn--sm" href="../terms/">Terms</a>
                     <a class="btn btn--ghost btn--sm" href="../data-deletion/">Data deletion</a>
                   </div>
-                </div>
-
-                <div class="panel-card">
-                  <h3>Reviewer note</h3>
-                  <p class="sub" style="margin-bottom:0">Inbox, contact consent, templates, automations and message sending are all reachable from the left rail. The real account sends through the WhatsApp Cloud API; the four demo accounts simulate replies so the review flow can be completed without messaging a real person.</p>
                 </div>
               </div>
             </div>
@@ -309,8 +298,8 @@
   <div class="ws-toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../assets/js/auth.js?v=20261026"></script>
-  <script src="../assets/js/workspace.js?v=20261026"></script>
+  <script src="../assets/js/auth.js?v=20261027"></script>
+  <script src="../assets/js/workspace.js?v=20261027"></script>
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 </body>
 </html>

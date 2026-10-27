@@ -1,10 +1,10 @@
 /* ==========================================================================
    Anvayra — main.js
-   Mobile nav, FAQ accordion, scroll reveal, contact form (Supabase lead intake)
+   Mobile nav, FAQ accordion, scroll reveal, contact form (managed lead intake)
    ========================================================================== */
 
 const SITE = {
-  // Public lead intake (Supabase Edge Function — no secrets in the browser)
+  // Public lead intake (server-side endpoint — no secrets in the browser)
   leadWebhookUrl: 'https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/wa-lead',
   fallbackEmail: 'shivamkushwahsironj@gmail.com'
 };

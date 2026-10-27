@@ -12,8 +12,8 @@
   <meta property="og:url" content="https://anvayra.vercel.app/">
   <link rel="canonical" href="https://anvayra.vercel.app/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./assets/css/fonts.css?v=20261026">
-  <link rel="stylesheet" href="./assets/css/paper.css?v=20261026">
+  <link rel="stylesheet" href="./assets/css/fonts.css?v=20261027">
+  <link rel="stylesheet" href="./assets/css/paper.css?v=20261027">
 </head>
 <body>
 
@@ -251,8 +251,8 @@
         <div class="preview">
           <div class="preview-copy reveal">
             <span class="eyebrow">The client dashboard</span>
-            <h2>This is the product, <span class="serif-em">not a mock-up.</span></h2>
-            <p class="lead">The dashboard performs real actions through the Meta Cloud API. It is the centrepiece of our app review — and the place clients use every day.</p>
+            <h2>A calm workspace for <span class="serif-em">real conversations.</span></h2>
+            <p class="lead">The preview below illustrates the interface. The live dashboard reads your own workspace and performs real actions through the Meta Cloud API — it is the centrepiece of our app review.</p>
             <ul class="checklist">
               <li><span class="tick">✓</span> Connect a WhatsApp Business Account with Meta Embedded Signup</li>
               <li><span class="tick">✓</span> See connected WABA ID and Phone Number ID</li>
@@ -265,7 +265,7 @@
             </div>
           </div>
 
-          <div class="mock reveal" id="homePreview" aria-label="Interactive dashboard preview">
+          <div class="mock reveal" id="homePreview" aria-label="Illustrative dashboard preview">
             <div class="mock-bar"><i></i><i></i><i></i><span>anvayra.app/dashboard</span></div>
             <div class="mock-body">
               <div class="mock-side">
@@ -281,8 +281,8 @@
                 <div class="mock-panel active" data-panel="overview">
                   <div class="mock-h"><strong>WhatsApp connection</strong><span>● CONNECTED</span></div>
                   <div class="mock-row">
-                    <div class="mock-field"><small>WABA ID</small><em>1029•••••••41</em></div>
-                    <div class="mock-field"><small>Phone Number ID</small><em>7712•••••••03</em></div>
+                    <div class="mock-field"><small>WABA</small><em>Connected</em></div>
+                    <div class="mock-field"><small>Phone number</small><em>Verified</em></div>
                   </div>
                   <div class="mock-line w80"></div>
                   <div class="mock-line w60"></div>
@@ -300,7 +300,7 @@
                   <p class="mock-note">Official Meta Embedded Signup. Your password is never shared.</p>
                   <span class="mock-btn mock-btn--wa">Connect WhatsApp Business</span>
                   <div class="mock-row" style="margin-top:12px">
-                    <div class="mock-field"><small>Business</small><em>Anvayra Studio</em></div>
+                    <div class="mock-field"><small>Business</small><em>Your business</em></div>
                     <div class="mock-field"><small>Status</small><em>Connected</em></div>
                   </div>
                   <div class="mock-log">
@@ -312,7 +312,7 @@
 
                 <div class="mock-panel" data-panel="send">
                   <div class="mock-h"><strong>Send a test message</strong><span>● CLOUD API</span></div>
-                  <div class="mock-field" style="margin-bottom:8px"><small>Recipient</small><em>+91 98765 43210</em></div>
+                  <div class="mock-field" style="margin-bottom:8px"><small>Recipient</small><em>Customer number</em></div>
                   <div class="mock-field" style="margin-bottom:10px"><small>Message</small><em>Hello! Your appointment is confirmed.</em></div>
                   <span class="mock-btn">Send test message</span>
                   <div class="mock-log" data-typing>
@@ -323,7 +323,7 @@
                 </div>
 
                 <div class="mock-panel" data-panel="templates">
-                  <div class="mock-h"><strong>Message templates</strong><span>● 3 ACTIVE</span></div>
+                  <div class="mock-h"><strong>Message templates</strong><span>● SYNCED</span></div>
                   <div class="mock-template"><span>appointment_reminder<br><small>UTILITY · en</small></span><b>Approved</b></div>
                   <div class="mock-template"><span>enquiry_followup<br><small>UTILITY · en</small></span><b>Approved</b></div>
                   <div class="mock-template"><span>order_update<br><small>UTILITY · en</small></span><b class="warn">In review</b></div>
@@ -332,7 +332,7 @@
                 <div class="mock-panel" data-panel="activity">
                   <div class="mock-h"><strong>Webhook activity</strong><span>● LIVE</span></div>
                   <div class="mock-log" data-typing>
-                    <div><b>✓</b> 14:02 · message queued · id wamid.9f2</div>
+                    <div><b>✓</b> 14:02 · message queued</div>
                     <div><b>✓</b> 14:02 · delivered</div>
                     <div><b>✓</b> 14:03 · read</div>
                     <div><span class="mock-reply">↳</span> 14:04 · reply received · webhook 200</div>
@@ -343,8 +343,8 @@
                 <div class="mock-panel" data-panel="settings">
                   <div class="mock-h"><strong>Account settings</strong><span>● SECURE</span></div>
                   <div class="mock-row">
-                    <div class="mock-field"><small>WABA ID</small><em>1029•••••••41</em></div>
-                    <div class="mock-field"><small>Phone Number ID</small><em>7712•••••••03</em></div>
+                    <div class="mock-field"><small>WABA</small><em>Connected</em></div>
+                    <div class="mock-field"><small>Phone number</small><em>Verified</em></div>
                   </div>
                   <div class="mock-log">
                     <div><b>✓</b> access token stored server-side only</div>
@@ -407,14 +407,13 @@
             <span class="eyebrow" style="margin-bottom:10px">Reviewer instructions</span>
             <h3 style="font-size:1.35rem;margin-bottom:10px">Test the full flow in 5 minutes</h3>
             <ol style="margin:0 0 0 18px;font-size:.86rem;color:var(--ink-70);line-height:1.8">
-              <li>Open <a href="./login/?reviewer=1">the sign-in page</a> and log in with the demo account below (email/password — this is a real account in our production database).</li>
-              <li>The workspace opens with five WhatsApp accounts; switch between them in one click — inbox, contacts, templates and automations all follow.</li>
-              <li>Send a message from a conversation: it moves <strong>queued → sent → delivered → read</strong> with the Cloud API <strong>wamid</strong> recorded, or a live send on the connected Cloud API number.</li>
-              <li>Use <strong>Settings → Connect WhatsApp Business</strong> to run Meta Embedded Signup; the connected WABA ID and Phone Number ID are stored per account.</li>
-              <li>Incoming replies arrive on our webhook, which verifies the <strong>X-Hub-Signature-256</strong> HMAC before storing anything.</li>
+              <li>Sign in with the reviewer account supplied in the App Review submission form. Review credentials are never published on this website.</li>
+              <li>Open <strong>Settings → Connect WhatsApp Business</strong> and complete Meta Embedded Signup to link a WhatsApp Business Account and phone number.</li>
+              <li>Open <strong>Inbox</strong> to read real customer conversations delivered by the Cloud API webhook, and reply from the composer. Sent messages are recorded with the Cloud API <strong>wamid</strong>.</li>
+              <li>Approved message templates from the connected WABA appear under <strong>Templates</strong>. Automation switches under <strong>Automations</strong> are stored per account.</li>
+              <li>Every inbound webhook is verified with <strong>X-Hub-Signature-256</strong> HMAC before anything is stored. Delivery status events update each message.</li>
             </ol>
             <div class="reviewer-note">
-              <strong>Reviewer demo login:</strong> <code>demo@anvayra.app</code> · password <code>anvayra2026</code><br>
               <strong>Business:</strong> Anvayra · Sole proprietor Shivam Kushwah · Sironj, Madhya Pradesh, India<br>
               <strong>Support:</strong> shivamkushwahsironj@gmail.com · +91 91658 26867
             </div>
@@ -615,6 +614,6 @@
     </div>
   </footer>
 
-  <script src="./assets/js/main.js?v=20261026"></script>
+  <script src="./assets/js/main.js?v=20261027"></script>
 </body>
 </html>

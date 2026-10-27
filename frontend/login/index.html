@@ -8,9 +8,9 @@
   <meta name="theme-color" content="#f2e7d3">
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%232b2117'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23f2e7d3' font-family='Georgia'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="../assets/css/fonts.css?v=20261026">
-  <link rel="stylesheet" href="../assets/css/paper.css?v=20261026">
-  <link rel="stylesheet" href="../assets/css/workspace.css?v=20261026">
+  <link rel="stylesheet" href="../assets/css/fonts.css?v=20261027">
+  <link rel="stylesheet" href="../assets/css/paper.css?v=20261027">
+  <link rel="stylesheet" href="../assets/css/workspace.css?v=20261027">
 </head>
 <body>
 
@@ -55,12 +55,6 @@
           <div class="gbtn-divider"><span>or</span></div>
         </div>
 
-        <div class="auth-demo" id="reviewerDemo" hidden>
-          <b>Reviewer demo access</b><br>
-          Email <code>demo@anvayra.app</code> · Password <code>anvayra2026</code><br>
-          <button type="button" id="fillDemo" style="margin-top:8px;background:none;border:0;padding:0;color:#8a4426;font:inherit;font-weight:600;cursor:pointer;text-decoration:underline">Fill demo credentials →</button>
-        </div>
-
         <form id="loginForm" novalidate>
           <div class="field">
             <label for="email">Email address</label>
@@ -80,7 +74,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../assets/js/auth.js?v=20261026"></script>
+  <script src="../assets/js/auth.js?v=20261027"></script>
   <style>
     .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;border:1px solid #d7c9b2;border-radius:8px;background:#fff;color:#3c4043;font:inherit;font-size:.92rem;font-weight:500;cursor:pointer}
     .gbtn:hover{background:#f7f2e8}
@@ -95,16 +89,6 @@
       const googleBtn = document.getElementById('googleBtn');
       const params = new URLSearchParams(window.location.search);
       const next = params.get('next') || 'dashboard';
-
-      /* Reviewer demo box only appears with ?reviewer=1 — out of the public
-         page, but linkable in the App Review notes. */
-      if (params.get('reviewer')) document.getElementById('reviewerDemo').hidden = false;
-
-      document.getElementById('fillDemo').addEventListener('click', function () {
-        document.getElementById('email').value = window.AnvayraAuth.demo.email;
-        document.getElementById('password').value = window.AnvayraAuth.demo.password;
-        document.getElementById('password').focus();
-      });
 
       function showError(message) {
         errorBox.textContent = message;

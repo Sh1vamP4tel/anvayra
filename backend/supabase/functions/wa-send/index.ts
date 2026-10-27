@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
   // account + workspace membership check (BOLA-safe)
   const { data: account } = await supabase
     .from("whatsapp_accounts")
-    .select("id, workspace_id, phone_number_id, status, is_demo, label")
+    .select("id, workspace_id, phone_number_id, status, label")
     .eq("id", String(accountId))
     .maybeSingle();
   if (!account) return json({ error: "unknown account" }, 404);
@@ -82,9 +82,6 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
   if (!member) return json({ error: "not a member of this workspace" }, 403);
 
-  if (account.is_demo) {
-    return json({ error: "This is a demo account — connect a real WhatsApp number first." }, 400);
-  }
   if (account.status !== "connected" || !account.phone_number_id) {
     return json({ error: "This account is not connected yet." }, 400);
   }
@@ -152,14 +149,15 @@ Deno.serve(async (req: Request) => {
   const wamid: string | null = result?.messages?.[0]?.id ?? null;
   const graphError = result?.error ?? null;
 
-  // resolve contact + thread for logging (both success and failure paths)
+  // resolve contact + thread for logging (both success and failure paths).
+  // opt_in_state is deliberately omitted so an existing consent decision is
+  // never overwritten; a new contact gets the column default ("unknown").
   const { data: contact } = await supabase
     .from("contacts")
     .upsert(
       {
         workspace_id: account.workspace_id,
         wa_id: toDigits,
-        opt_in_state: "unknown",
         last_seen_at: new Date().toISOString(),
       },
       { onConflict: "workspace_id,wa_id" },

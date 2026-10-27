@@ -1,9 +1,9 @@
 // Anvayra — wa-connect: Embedded Signup / token exchange callback (production)
-// POST { code, businessId?, wabaId? } with a user JWT. Exchanges the OAuth
-// code for a token, upgrades to long-lived, inspects granted scopes, locates
-// the WABA + phone numbers, stores the token in the server-side vault via
-// store_wa_token(), and upserts whatsapp_accounts. Requires META_APP_ID +
-// META_APP_SECRET secrets (set via dashboard/CLI).
+// POST { code, workspaceId, wabaId?, phoneNumberId?, label? } with a user JWT.
+// Exchanges the OAuth code for a token, upgrades to long-lived, inspects granted
+// scopes, resolves the WABA + phone numbers, subscribes the app to the WABA
+// webhook, stores the token in the server-side vault via store_wa_token(), and
+// upserts whatsapp_accounts. Requires META_APP_ID + META_APP_SECRET secrets.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = Deno.env.get("GRAPH_VERSION") ?? "v21.0";
@@ -68,6 +68,7 @@ Deno.serve(async (req: Request) => {
   }
   const code = body?.code;
   const workspaceId: string | undefined = body?.workspaceId;
+  const explicitPhoneId: string | null = body?.phoneNumberId ? String(body.phoneNumberId) : null;
   const label: string = typeof body?.label === "string" && body.label.trim() ? body.label.trim() : "WhatsApp Business";
   if (!code || !workspaceId) return json({ error: "code and workspaceId are required" }, 400);
 
@@ -110,35 +111,52 @@ Deno.serve(async (req: Request) => {
     .filter((s: any) => s.scope === "whatsapp_business_management")
     .flatMap((s: any) => s.target_ids ?? []);
 
-  // 4) resolve phone numbers (first WABA, or explicit from body)
+  // 4) resolve phone numbers (explicit Embedded Signup number, or first WABA)
   let wabaId: string | null = body?.wabaId ? String(body.wabaId) : (wabaIds[0] ?? null);
-  const phones: Array<{ id: string; display_phone: string; name: string }> = [];
-  if (wabaId) {
-    const pn = await graph("/" + wabaId + "/phone_numbers", {
+  let phones: Array<{ id: string; display_phone: string; name: string }> = [];
+  async function loadPhones(id: string): Promise<Array<{ id: string; display_phone: string; name: string }>> {
+    const pn = await graph("/" + id + "/phone_numbers", {
       access_token: accessToken,
       fields: "id,display_phone_number,verified_name",
+      limit: "100",
     });
-    for (const p of pn?.data ?? []) {
-      phones.push({
-        id: p.id,
-        display_phone: p.display_phone_number,
-        name: p.verified_name ?? p.display_phone_number,
-      });
-    }
+    return (pn?.data ?? []).map((p: any) => ({
+      id: String(p.id),
+      display_phone: p.display_phone_number,
+      name: p.verified_name ?? p.display_phone_number,
+    }));
+  }
+  if (wabaId) {
+    phones = await loadPhones(wabaId);
     if (!phones.length) {
-      // WABA id might be scoped differently; try list of WABAs
+      // WABA id might be scoped differently; try every WABA returned by the token.
       for (const alt of wabaIds) {
-        const altPn = await graph("/" + alt + "/phone_numbers", {
-          access_token: accessToken,
-          fields: "id,display_phone_number,verified_name",
-        });
-        if (altPn?.data?.length) {
+        if (alt === wabaId) continue;
+        const altPhones = await loadPhones(alt);
+        if (altPhones.length) {
           wabaId = alt;
-          for (const p of altPn.data) {
-            phones.push({ id: p.id, display_phone: p.display_phone_number, name: p.verified_name ?? p.display_phone_number });
-          }
+          phones = altPhones;
           break;
         }
+      }
+    }
+  }
+  if (explicitPhoneId) {
+    const selected = phones.find((p) => p.id === explicitPhoneId);
+    if (selected) {
+      phones = [selected];
+    } else {
+      // The number was not in the WABA list; read it directly and verify it exists.
+      const one = await graph("/" + explicitPhoneId, {
+        access_token: accessToken,
+        fields: "id,display_phone_number,verified_name",
+      });
+      if (one?.id) {
+        phones = [{
+          id: String(one.id),
+          display_phone: one.display_phone_number,
+          name: one.verified_name ?? one.display_phone_number,
+        }];
       }
     }
   }
@@ -146,7 +164,21 @@ Deno.serve(async (req: Request) => {
     return json({ error: "No WhatsApp Business Account or phone numbers were shared. Complete Embedded Signup with all permissions granted.", scopes }, 400);
   }
 
-  // 5) persist account rows + tokens (one per phone number)
+  // 5) subscribe this app to the WABA so inbound messages and status events arrive.
+  let webhookSubscribed = false;
+  try {
+    const subResp = await fetch(
+      "https://graph.facebook.com/" + GRAPH_VERSION + "/" + wabaId + "/subscribed_apps",
+      { method: "POST", headers: { Authorization: "Bearer " + accessToken } },
+    );
+    const subResult = await subResp.json().catch(() => ({}));
+    webhookSubscribed = Boolean(subResp.ok && !subResult?.error);
+    if (!webhookSubscribed) console.error("subscribed_apps failed:", JSON.stringify(subResult));
+  } catch (err) {
+    console.error("subscribed_apps request failed:", String((err as Error)?.message ?? err));
+  }
+
+  // 6) persist account rows + tokens (one per phone number)
   const created: Array<{ id: string; label: string; phone: string; phone_number_id: string }> = [];
   for (const p of phones) {
     const { data: acct, error: acctErr } = await supabase
@@ -191,5 +223,5 @@ Deno.serve(async (req: Request) => {
     kind: "ok",
   });
 
-  return json({ ok: true, wabaId, scopes, accounts: created });
+  return json({ ok: true, wabaId, scopes, webhookSubscribed, accounts: created });
 });

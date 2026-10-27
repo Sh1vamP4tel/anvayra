@@ -192,17 +192,14 @@ Deno.serve(async (req: Request) => {
       const from: string = msg.from;
       const profileName: string | undefined = value.contacts?.[0]?.profile?.name;
 
-      // contacts upsert
-      await client.from("contacts").upsert(
-        {
-          workspace_id: workspaceId,
-          wa_id: from,
-          name: profileName ?? null,
-          opt_in_state: "unknown",
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: "workspace_id,wa_id" },
-      );
+      // contacts upsert — never overwrite an existing consent decision or name
+      const contactRow: Record<string, unknown> = {
+        workspace_id: workspaceId,
+        wa_id: from,
+        last_seen_at: new Date().toISOString(),
+      };
+      if (profileName) contactRow.name = profileName;
+      await client.from("contacts").upsert(contactRow, { onConflict: "workspace_id,wa_id" });
       const { data: contact } = await client
         .from("contacts")
         .select("id")
@@ -215,7 +212,7 @@ Deno.serve(async (req: Request) => {
       let threadId: string | undefined;
       const { data: thread } = await client
         .from("threads")
-        .select("id")
+        .select("id, unread_count")
         .eq("account_id", account.id)
         .eq("contact_id", contact.id)
         .maybeSingle();
@@ -255,13 +252,13 @@ Deno.serve(async (req: Request) => {
         .update({
           last_message_at: ts,
           last_message_preview: (body ?? "[" + (msg.type ?? "media") + "]").slice(0, 140),
-          unread_count: 1,
+          unread_count: (thread?.unread_count ?? 0) + 1,
           status: "open",
           updated_at: new Date().toISOString(),
         })
         .eq("id", threadId);
 
-      // opt-out keywords → suppression (compliance)
+      // opt-out keywords → suppression + contact consent state (compliance)
       if (body && STOP_RE.test(body)) {
         await client.from("suppressions").upsert(
           {
@@ -272,6 +269,10 @@ Deno.serve(async (req: Request) => {
           },
           { onConflict: "workspace_id,wa_id" },
         );
+        await client
+          .from("contacts")
+          .update({ opt_in_state: "opted_out", updated_at: new Date().toISOString() })
+          .eq("id", contact.id);
       }
     }
 

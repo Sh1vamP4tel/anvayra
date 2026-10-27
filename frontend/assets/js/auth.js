@@ -1,22 +1,22 @@
 /* ==========================================================================
-   Anvayra — auth.js (Supabase Auth, production)
+   Anvayra — auth.js (production authentication)
 
-   Real authentication: Supabase Auth (email + password, Google OAuth).
+   Real authentication: managed identity provider (email + password, Google OAuth).
    Sessions are JWTs managed by supabase-js (refreshed automatically);
    user identity lives in auth.users, profiles/workspaces in Postgres.
 
-   Removed: the old localStorage user store, salted SHA-256 demo hashing,
-   12-hour localStorage sessions, and the seeded localStorage demo user.
-   The reviewer demo account is a real Supabase user provisioned server-side.
+   Removed: the old browser-only user store, local password hashing, fixed
+   12-hour sessions and shared sign-in. Every account is a real customer
+   account created through the identity provider.
 
-   Google OAuth provider must be enabled in Supabase Dashboard > Auth >
-   Providers > Google with GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET.
+   Google OAuth must be enabled in the identity provider dashboard with the
+   Google client ID and secret.
    ========================================================================== */
 
 window.AnvayraAuth = (function () {
   'use strict';
 
-  /* ---------- Supabase client ---------- */
+  /* ---------- Auth client ---------- */
   const SUPABASE_URL = 'https://nbxsebcrcussmmxismsa.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_i_72_ereXj3VTKsjOCfi-g_rmbwjsJX';
 
@@ -37,10 +37,10 @@ window.AnvayraAuth = (function () {
 
   /* Optional: authoritative server-side session confirmation via the Express
      backend. When the backend is deployed, set this URL (e.g.
-     "https://api.example.com/api/auth/session"). If it is empty, the dashboard
-     trusts the Supabase session directly (still validated by Supabase getUser).
+     "https://api.yourdomain.com/api/auth/session"). If it is empty, the dashboard
+     trusts the session directly (still validated with the identity provider).
      This hook never blocks or breaks the app: a network error or timeout keeps
-     the Supabase session; only an explicit server "authenticated:false" (token
+     the session; only an explicit server "authenticated:false" (token
      revoked server-side) forces a sign-out. */
   const SERVER_SESSION_URL = (window.AnvayraServerSessionUrl || '').replace(/\/+$/, '');
 
@@ -59,19 +59,11 @@ window.AnvayraAuth = (function () {
       if (data && data.authenticated === false) return { confirmed: false };
       return { confirmed: true };
     } catch (_) {
-      return { confirmed: true }; // network/timeout -> trust Supabase
+      return { confirmed: true }; // network/timeout -> trust the session
     } finally {
       clearTimeout(timer);
     }
   }
-
-  /* Reviewer demo account (provisioned server-side in Supabase Auth) */
-  const DEMO = {
-    name: 'Shivam Kushwah',
-    email: 'demo@anvayra.app',
-    password: 'anvayra2026',
-    business: 'Anvayra Automation'
-  };
 
   /* ---------- helpers ---------- */
   function normaliseEmail(email) {
@@ -84,7 +76,7 @@ window.AnvayraAuth = (function () {
     return error;
   }
 
-  /* Translate common Supabase / provider errors into reviewer-friendly copy. */
+  /* Translate common identity-provider errors into plain-language copy. */
   function friendly(message) {
     const m = String(message || '');
     if (/invalid login credentials/i.test(m)) return 'That email or password is incorrect.';
@@ -211,9 +203,9 @@ window.AnvayraAuth = (function () {
 
   /* ---------- social ---------- */
   function oauthRedirect() {
-    /* Post-login destination. Supabase must have this origin in Auth → URL
-       Configuration → Redirect URLs, and Site URL must be the production
-       domain, otherwise GoTrue falls back to Site URL (often localhost:3000). */
+    /* Post-login destination. The identity provider must allow this origin in
+       its redirect URL list, and the site URL must be the production domain,
+       otherwise OAuth falls back to the site URL (often localhost:3000). */
     const origin = /^https?:$/.test(window.location.protocol)
       ? window.location.origin
       : 'https://anvayra.vercel.app';
@@ -296,7 +288,6 @@ window.AnvayraAuth = (function () {
 
   return {
     client,
-    demo: DEMO,
     getSession,
     requireSession,
     login,

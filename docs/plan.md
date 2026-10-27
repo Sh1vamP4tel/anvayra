@@ -1,515 +1,323 @@
-# Meta App Verification Website — Build Plan & Result
+# Anvayra WhatsApp Platform — Build Plan & Current State
 
-**Date:** 24 Oct 2026
-**Folder:** `/home/ronny/Desktop/meta-app`
-**Brand:** Anvayra (operated by Shivam Kushwah)
-**Purpose:** A live, review-ready website that proves Anvayra is a real WhatsApp Tech Provider business — not a portfolio mock-up.
-**Supabase project:** `nbxsebcrcussmmxismsa` (https://nbxsebcrcussmmxismsa.supabase.co) — production auth + Postgres.
-
----
-
-## 1. What we are building (and why)
-
-Meta App Review needs to see a **working business product**, not just marketing pages. The reviewer must be able to:
-
-1. Understand what the business does in under 10 seconds.
-2. See the WhatsApp product, permissions it uses, and how a client onboards.
-3. Open a functional Client Dashboard (Connect WhatsApp, WABA / Phone Number ID, send test message, logs).
-4. Read live Privacy Policy, Terms of Service and Data Deletion pages.
-5. Find a real business identity: legal name, email, phone, address.
-
-### Design direction (new, not the old portfolio)
-
-- **Brown paper / kraft journal aesthetic** — warm paper texture, serif headlines, ink-brown text, rust accents, thin hand-ruled borders.
-- **No background video, no stock photos, no image assets.** Texture and visual interest come from CSS only (paper grain, ruled lines, stamps, tape corners).
-- **Fully new CSS** (`assets/css/paper.css`). The old `style.css` is not used or copied.
-- **High contrast for review:** deep ink `#2b2117` on cream paper `#f2e7d3`, with WCAG-friendly body text.
-- **Simple, predictable structure:** one scrolling home page + dashboard + three legal pages.
+**Last updated:** 27 October 2026
+**Repository:** `Sh1vamP4tel/anvayra` (branch `main`)
+**Production URL:** `https://anvayra.vercel.app` (final domain pending)
+**Supabase project:** `nbxsebcrcussmmxismsa` — `https://nbxsebcrcussmmxismsa.supabase.co`
 
 ---
 
-## 2. File structure
+## 1. Objective
+
+Ship a real, App-Review-ready WhatsApp Tech Provider product:
+
+- A public business website with working legal pages and a real contact form.
+- Authenticated workspace backed by Postgres, not browser storage.
+- Meta Embedded Signup that onboards a client's own WABA and phone number.
+- Cloud API sending, webhook receiving, template sync, delivery status and opt-out handling.
+- No demo tenants, seeded conversations, simulated replies or shared reviewer credentials.
+
+Every visible account, contact, thread, message, template and automation is real data for the
+signed-in workspace. When a workspace has no data, the UI shows an explicit empty state.
+
+---
+
+## 2. Architecture
 
 ```
-meta-app/
-  index.html                  → marketing + verification proof
-  login.html                  → workspace sign in (demo reviewer account)
-  signup.html                 → create a workspace
-  dashboard.html              → multi-account workspace (review centrepiece)
-  thank-you.html              → form success page
-  robots.txt, sitemap.xml
-  assets/
-    css/paper.css             → complete design system
-    css/workspace.css         → auth screens + workspace layout
-    css/fonts.css             → self-hosted @font-face (latin subsets)
-    fonts/*.woff2             → 14 files, ~460 KB, no external font calls
-    js/main.js                → nav, FAQ, form, preview tabs, typewriter
-    js/auth.js                → session, demo user, signup / login / logout
-    js/workspace.js           → accounts, inbox, send, templates, logs
-    img/logo-mark.png, app-icon-1024.png, founder.jpg
-  privacy/index.html          → Privacy Policy
-  terms/index.html            → Terms of Service
-  data-deletion/index.html    → Data Deletion Instructions
-  docs/                       → internal briefs + this plan (not linked)
+Browser (static frontend on Vercel)
+  index.html · login/ · signup/ · dashboard/ · privacy/ · terms/ · data-deletion/
+  assets/js/auth.js       session + OAuth
+  assets/js/workspace.js  DB-backed workspace, Embedded Signup, sending, template sync
+        │
+        │ HTTPS + user JWT
+        ▼
+Supabase project nbxsebcrcussmmxismsa
+  Auth .............. email/password + Google OAuth
+  Postgres .......... RLS-scoped business data
+  Edge Functions .... wa-connect · wa-send · wa-templates · wa-webhook ·
+                      wa-lead · data-deletion · health
+        │
+        │ Graph API v21.0
+        ▼
+Meta WhatsApp Business Platform
+  Embedded Signup · Cloud API · message templates · webhooks
 ```
 
-All links are relative, so the site works on Vercel, Netlify or any static host.
+Optional Node/Express host lives in `backend/server/` for deployments that need an authoritative
+`POST /api/auth/session` check. The static frontend works without it; the dashboard already
+validates the session server-side through Supabase Auth.
 
 ---
 
-## 3. Content map vs Meta review requirements
-
-| Requirement (info.txt / info2.txt) | Where it is on the new site |
-|---|---|
-| Clear business name + one-line positioning | Hero: "WhatsApp automation for real businesses" |
-| CTAs: Connect WhatsApp / Book Demo / Dashboard | Hero (3 buttons) + nav + closing CTA |
-| Services: AI WhatsApp agent, follow-up, reminders, templates, n8n | `#services` — 6 paper cards |
-| How it works: connect → number → template → send → track | `#how` — 4 numbered steps |
-| Client Dashboard (main review area) | `dashboard.html` — Connect, WABA/Phone ID, send, logs, provider table |
-| Permissions explained for reviewers | `#permissions` — messaging / management / business_management |
-| Trust pages | `/privacy/`, `/terms/`, `/data-deletion/` |
-| Contact with real email, phone, address | `#contact` + footer + thank-you page |
-| Consent checkbox for WhatsApp messages | Contact form checkbox (required) |
-| Opt-in / STOP handling explained | Security & compliance section + privacy policy |
-| Tech Provider proof | "Built on the official WhatsApp Business Platform" + reviewer note block |
-| About the business | Founder + legal business details in `#about` |
-| FAQ | `#faq` — 6 questions reviewers/clients ask |
-
----
-
-## 4. n8n backend
-
-**Workflow name:** `meta-app-verification` (new, in teamapexgaming workspace)
-
-Routes:
-
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/webhook/meta-app-verification` | Meta webhook verification — validates `hub.verify_token`, echoes `hub.challenge`, 403 on mismatch |
-| POST | `/webhook/meta-app-verification` | Receives WhatsApp message + template-status events, normalizes, returns `200 OK` fast |
-| POST | `/webhook/meta-app-verification/lead` | Website contact form + consent capture endpoint (validates required fields, returns JSON) |
-| GET | `/webhook/meta-app-verification/health` | Public health/readiness JSON for reviewers |
-
-Existing workflows stay untouched:
-- `meta-app` (already live) — verification + incoming + **send message** endpoint used by dashboard.
-- `Anvayra - Fixed WhatsApp Callback` — Embedded Signup code → token exchange.
-
-**Secrets:** App Secret and access tokens live only in n8n credentials/env. The browser never receives them.
-
----
-
-## 5. Deploy checklist (10 minutes after build)
-
-1. Upload the `meta-app` folder to Vercel as a new static project (or replace `anvayra`).
-2. In `assets/js/workspace.js`, confirm `CONFIG` values:
-   - `appId` = `1111754955165517`
-   - `configId` = `1469679065081628`
-   - `callbackUrl` = `https://teamapexgaming.app.n8n.cloud/webhook/whatsapp-callback`
-   - `sendUrl` = `https://teamapexgaming.app.n8n.cloud/webhook/meta-app/send`
-   - `healthUrl` = `https://teamapexgaming.app.n8n.cloud/webhook/meta-app-verification/health`
-   - `redirectUri` is derived automatically from the deployed domain (`window.location.origin + '/'`).
-3. Meta App Dashboard:
-   - App Domains: the new deployed domain + `teamapexgaming.app.n8n.cloud`
-   - Valid OAuth Redirect URI: new domain (must match the deployed origin)
-   - Webhook callback: `https://teamapexgaming.app.n8n.cloud/webhook/meta-app-verification` (or keep `meta-app`)
-   - Verify token: `anvayra-meta-verify-1111754955165517`
-4. Update the canonical/OG URL in `index.html` to the live domain.
-5. Submit for App Review with reviewer steps from section 6.
-
----
-
-## 6. Reviewer instructions (copy-paste)
-
-1. Open the website home page — services, business details and legal pages are public.
-2. Click **Client login** (header or hero) → sign in with:
-   - Email: `demo@anvayra.app`
-   - Password: `anvayra2026`
-   (or click “Fill demo credentials” on the login screen)
-3. The workspace opens with **5 WhatsApp accounts** in the left rail: `Anvayra Support` (live Cloud API account) plus four clearly labelled demo tenants (Lotus Dental, Sunrise Realty, Cafe Mocha House, Fitloop Studio).
-4. Switch accounts in one click — inbox, contacts, templates, automations and settings all follow the selected account.
-5. Open a demo account (e.g. Lotus Dental) and send a message: it moves **queued → sent → delivered → read**, then a simulated customer reply arrives (`webhook 200 OK` in the activity log). No real message is sent on demo accounts.
-6. On `Anvayra Support`, open **Settings → Connection details**, paste the account's **Phone Number ID** and **WABA ID**, save, then send from the inbox — this calls `POST /webhook/meta-app/send`, which sends through the official WhatsApp Cloud API. The access token never leaves n8n.
-7. **Connect WhatsApp Business** (top right or Settings) opens Meta Embedded Signup (`config_id 1469679065081628`); the returned `waba_id` / `phone_number_id` are saved per account, and the auth code is exchanged server-side via `/webhook/whatsapp-callback`.
-8. Incoming replies are received by the `meta-app-verification` webhook and acknowledged with HTTP 200.
-9. To delete data: `/data-deletion/` (email request, actioned within 7 days) or **Settings → Clear local workspace data**.
-10. **Sign out** in the rail bottom-left.
-
----
-
-## 7. Actual result (completed 24 Oct 2026)
-
-### Website — built and locally verified
-
-- [x] Home page rebuilt from scratch in a brown-paper / kraft theme (`assets/css/paper.css`). Old `style.css` not used.
-- [x] No background video, no stock images, no copied assets. Visual texture is CSS (grain, ruled lines, tape, stamp).
-- [x] High-contrast palette: ink `#2b2117` on paper `#f2e7d3`, rust `#8a4426` accents.
-- [x] Responsive at desktop, tablet and mobile (tested at 1440px and 390px).
-- [x] Dashboard rebuilt with the same theme and wired to the existing n8n endpoints.
-- [x] Privacy, Terms, Data Deletion live as real pages in `/privacy/`, `/terms/`, `/data-deletion/`.
-- [x] Contact form with required WhatsApp consent checkbox, n8n lead endpoint and `thank-you.html`.
-- [x] Favicon, robots.txt and sitemap.xml added.
-- [x] All internal links checked — zero broken links; JS syntax checks pass.
-
-### n8n — workflow created, published and tested
-
-**Workflow:** `meta-app-verification`
-**URL:** https://teamapexgaming.app.n8n.cloud/workflow/tfcSmIkGlNdySVxH
-**Status:** Published and active · 14 nodes · 4 groups
-
-| Test | Result |
-|---|---|
-| `GET /webhook/meta-app-verification?hub.verify_token=…&hub.challenge=987654` | ✅ 200, body `987654` |
-| Same request with a wrong token | ✅ 403 `Forbidden: wrong verify token` |
-| `GET /webhook/meta-app-verification/health` | ✅ 200 JSON `{status:"ok", …}` |
-| `POST /webhook/meta-app-verification/lead` with consent `true` | ✅ 200 `{received:true}` |
-| `POST /webhook/meta-app-verification/lead` with consent `false` | ✅ 400 validation error |
-| CORS preflight `OPTIONS /lead` | ✅ 204 with matching `Access-Control-Allow-Origin` |
-
-The website’s dashboard health check is already pointed at this workflow and displays **“Online · 200 OK”**.
-
-### Two values to keep consistent everywhere
-
-- **Verify token:** `anvayra-meta-verify-1111754955165517`
-- **Webhook URL:** `https://teamapexgaming.app.n8n.cloud/webhook/meta-app-verification`
-
-### One thing to confirm before submitting
-
-The dashboard sends messages through the **existing, already-published** `meta-app` workflow (`/webhook/meta-app/send`) because it already holds the WhatsApp credential. The new `meta-app-verification` workflow handles verification, incoming events, leads/consent and health. If you prefer one workflow to do everything, we can merge the send route into `meta-app-verification` later — but doing so is not required for review and risks breaking the working send path today.
-
----
-
-## 8. Workspace build (added 24 Oct 2026)
-
-### What changed
-
-| Area | Before | Now |
-|---|---|---|
-| Auth | None (dashboard open to anyone) | `login.html` + `signup.html`, salted SHA-256 passwords in `localStorage`, 12-hour session, redirect guard |
-| Accounts | One hard-coded account | 5 accounts: `Anvayra Support` (live Cloud API) + 4 demo tenants |
-| Inbox | Single static thread | Threaded per account, search, unread counts, day separators, delivery ticks |
-| Sending | One test form | Composer per conversation; demo accounts simulate `queued → sent → delivered → read` then auto-reply; live account calls `/webhook/meta-app/send` |
-| Views | 1 | Inbox, Contacts, Templates, Automations, Settings |
-| Data | — | Per-user workspace state (`anvayra.workspace.v1.<userId>`), templates, automation switches, activity log |
-| Fonts | Google Fonts CDN | Self-hosted `assets/fonts` + `assets/css/fonts.css` (works offline, no third-party request) |
-
-### Reviewer demo account
-
-- Email `demo@anvayra.app`, password `anvayra2026` (seeded automatically on first login).
-- New signups get their own `Your business` account (empty, not connected) plus the four demo tenants, and their own storage namespace.
-- Demo replies are generated locally and labelled as such in the composer hint and activity log — never presented as real WhatsApp traffic.
-
-### Live-send requirements (the one remaining external piece)
-
-`/webhook/meta-app/send` requires **`to`, `message` and `phoneNumberId`** (verified against the published workflow). It then sends through the `WhatsApp account` credential (`3g9xCjWEuzqXksPj`).
-
-To make `Anvayra Support` send for real:
-
-1. Get the **Phone Number ID** and **WABA ID** for +91 91658 26867 from Meta → WhatsApp → API Setup.
-2. Paste both into **Settings → Connection details** and save (stored in that browser only).
-3. Open a conversation and send. Success shows `Accepted by Cloud API · wamid …` and an HTTP 200 in n8n.
-
-Until those two values are entered the account correctly shows `SETUP · CLOUD API` instead of `LIVE`.
-
-**Multi-account caveat:** one credential can only send from numbers it has access to. Sending from a *client's* WABA needs that client's own token (from Embedded Signup) stored server-side per account — the current build reuses Anvayra's token, so the four extra accounts are intentionally demo-only.
-
-### WhatsApp Coexistence
-
-Coexistence is not granted by App Review. It is a separate Meta onboarding track (Business app + Cloud API on one number). The site explains the model, but the switch is flipped by Meta after eligibility/onboarding approval — no website change can enable it.
-
-### Verification performed
-
-- `node --check` passes on `auth.js`, `workspace.js`, `main.js`.
-- Zero broken internal links across all HTML files.
-- Browser E2E: demo login → workspace (5 accounts, 2 threads on the live account); all five views render (2 contacts, 5 templates, 6 automations, 11 provider rows); account switching; template → composer; automation toggle + log; search empty state; profile save; sign-out.
-- Delivery simulation sampled every 300 ms: `queued → sent → delivered → read → inbound reply`.
-- Real-send guard: without a Phone Number ID the bubble fails with an explicit message instead of a silent error.
-- Mobile 390×844: rail drawer, inbox list, chat view with back button, composer visible; settings scrolls.
-- Homepage re-checked at 1440×1000 after the font self-hosting change.
-
----
-
-## 9. P2 — Real authentication + pretty URLs (completed 24 Oct 2026)
-
-### Auth: localStorage → Supabase Auth (done)
-
-| Before | Now |
-|---|---|
-| `auth.js` localStorage user store, salted SHA-256 passwords | `supabase.auth` — email/password (`signInWithPassword`, `signUp`) |
-| 12-hour localStorage session with own expiry | JWT session managed by supabase-js v2 (auto-refresh, persisted) |
-| `usr_demo` seeded in localStorage | `demo@anvayra.app` is a **real confirmed Supabase user** (`37b9c643-989b-41b2-bbba-976f21858a38`), provisioned server-side; trigger auto-created profile + workspace + owner membership |
-| `requireSession()` sync localStorage check | `requireSession()` async guard → `supabase.auth.getUser()` (+ profile row) |
-| `updateProfile()` wrote to localStorage | Writes to `public.profiles` via RLS + keeps auth metadata in step |
-| Random local userId in workspace namespace | `anvayra.workspace.v1.<auth.users.id>` (uuid) with one-time legacy-key migration |
-
-- Login/signup pages load `supabase-js@2` from jsDelivr CDN, then `assets/js/auth.js`.
-- Email confirmation is ON: signups show a "check your inbox" state; demo user bypasses it (server-seeded).
-- **Google OAuth is wired** (`signInWithOAuth({ provider: 'google', redirectTo: origin + '/dashboard/' })`) with the official Google button style on login + signup. To activate:
-  1. Google Cloud Console → OAuth consent screen (App: Anvayra, support email shivamkushwahsironj@gmail.com, scopes `email` + `profile`).
-  2. Create OAuth Client ID (Web) with redirect URI:
-     `https://nbxsebcrcussmmxismsa.supabase.co/auth/v1/callback`
-  3. Supabase Dashboard → Auth → Providers → Google → enable with the Client ID/Secret.
-  4. Add the production domain to Google "Authorized domains" once the real domain is live.
-- **Facebook Login intentionally deferred** — add a 2nd Meta App for login only so it cannot jeopardise the WhatsApp `whatsapp_business_messaging` review (button code `signInWithFacebook` is already in auth.js, provider to be enabled later).
-- Reviewer demo box on `/login/` is hidden by default and shows only with `?reviewer=1`.
-- Privacy Policy section 3 added: Google/Facebook OAuth disclosure (name/email/profile picture via Supabase).
-
-### Pretty URLs (done)
+## 3. Repository layout
 
 ```
-/                     → index.html (home)
-/dashboard/           → dashboard/index.html   (was /dashboard.html)
-/login/               → login/index.html       (was /login.html)
-/signup/              → signup/index.html      (was /signup.html)
-/thank-you/           → thank-you/index.html   (was /thank-you.html)
-/privacy/ /terms/ /data-deletion/  (already foldered)
-```
-
-- Old `*.html` root paths remain as redirect stubs (0-second meta refresh) so any reviewer bookmark still lands correctly.
-- `assets/js/main.js`, all nav/footer links, workspace links and auth redirects updated; 0 broken links verified.
-
-### Vercel config (new `vercel.json`)
-
-- `cleanUrls: true` + `trailingSlash: false` → `/dashboard`, `/login` serve the folder index files.
-- Rewrites: legacy `/dashboard.html` etc → new clean paths; `/docs/*` → `/404.html` (docs no longer deployable).
-- Security headers (nosniff, frame-options, referrer-policy, permissions-policy) + immutable cache for `/assets/`.
-- `404.html` added; `robots.txt` updated to disallow the new workspace paths.
-
-### Verified
-
-- `node --check` passes on `auth.js`, `workspace.js`, `main.js`.
-- All internal links resolve; duplicate-ID check clean across all pages.
-- Live login test against the production Auth API: `demo@anvayra.app / anvayra2026` → 200 + access token; wrong password → 400.
-- Signup path: `signUp` with `full_name`/`business_name` metadata → DB trigger provisions profile + workspace + owner membership (verified earlier with a test user).
-
-### Still pending (user actions)
-
-1. Google Cloud OAuth Client (Client ID + Secret) → paste into Supabase Auth → Providers → Google. Redirect URI: `https://nbxsebcrcussmmxismsa.supabase.co/auth/v1/callback`.
-2. Final production domain (anvayra.com) → update sitemap, robots, canonical, OAuth redirect URIs.
-3. WhatsApp: Phone Number ID + WABA ID + permanent System User token → P3 Edge Functions (`wa-webhook`, `wa-send`, `wa-connect`, `data-deletion`).
-
-### Follow-up fix (same day): dashboard redirect loop resolved
-
-**Symptom:** after logging in, `/dashboard/` bounced back to `/login/?next=dashboard`.
-
-**Root cause:** `dashboard/index.html` loaded `auth.js` but never loaded the supabase-js CDN
-script, so `window.supabase` was undefined → `AnvayraAuth.client === null` → `getSession()`
-returned null → the guard redirected even with a valid stored session.
-
-**Fix:** added `<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>`
-before `../assets/js/auth.js` in `dashboard/index.html`.
-
-**Re-verified end to end in the browser:**
-
-1. `/login/` loads, supabase-js OK, demo box hidden without `?reviewer=1`, Google button present.
-2. Programmatic login (`AnvayraAuth.login`) → `ok:true`, userId `37b9c643-…`, name "Shivam Kushwah".
-3. Navigating to `/dashboard/` with the session → **loads, no redirect**; header shows
-   "Shivam Kushwah / demo@anvayra.app"; 5 workspace accounts seeded (Anvayra Automation + 4 demo tenants).
-4. `Sign out` → redirects to `/login/`.
-5. UI-form login (fill fields + submit) → redirects to `/dashboard/`, session resolves.
-
-Handbook (`docs/WEBSITE-HANDBOOK.md`) updated to v2.0: auth section rewritten for Supabase,
-status matrix updated (G-1 auth part resolved), repository map now shows the foldered layout.
-
----
-
-## 10 · P3 — Supabase Edge Functions backend (DONE)
-
-The public backend is now hosted on **Supabase Edge Functions** on project
-`nbxsebcrcussmmxismsa` (`https://nbxsebcrcussmmxismsa.supabase.co`). The legacy
-`teamapexgaming.app.n8n.cloud` webhooks are replaced: `workspace.js` now points
-at the Edge Functions and no longer references the old n8n URLs.
-
-### Deployed functions (all live, versioned in `supabase/functions/`)
-
-| Function | URL | `verify_jwt` | Role |
-|---|---|---|---|
-| `wa-webhook` | `/functions/v1/wa-webhook` | false (own HMAC) | Meta webhook: GET handshake, POST signature check + idempotent persist |
-| `wa-send` | `/functions/v1/wa-send` | true (user JWT) | Real Cloud API sends via vault token, membership + suppression + rate-limit checks |
-| `wa-connect` | `/functions/v1/wa-connect` | true (user JWT) | Embedded Signup code → long-lived token → WABA + phone numbers → vault + `whatsapp_accounts` |
-| `data-deletion` | `/functions/v1/data-deletion` | false (signed_request) | Meta Data Deletion callback + `GET ?code=` status |
-| `health` | `/functions/v1/health` | false | Liveness/config probe |
-| `wa-lead` | `/functions/v1/wa-lead` | false | Public contact-form intake → `public.leads` (honeypot + rate limit) |
-
-`public.leads` table added (`meta_platform_public_leads` migration), RLS on, no client access.
-
-### Verified live (curl)
-
-- `GET /functions/v1/health` → `200 {"ok":true,…}`; `appSecretConfigured:false`, `systemTokenConfigured:false` (secrets pending).
-- `GET /functions/v1/wa-webhook?hub.mode=subscribe&hub.verify_token=…&hub.challenge=CHALLENGE` → echoes challenge `200`; wrong token → `403`.
-- `POST /functions/v1/wa-webhook` with a real payload, no APP_SECRET → `200 {ok:true,note:"signature unconfigured"}` and the event row persisted; re-POST same event → `200 {ok:true,duplicate:true}` (idempotent). Test rows cleaned from `webhook_events`.
-- `POST /functions/v1/wa-send` and `/wa-connect` without a JWT → `401` (gate refuses).
-- `GET /functions/v1/data-deletion?code=NOPE` → `404` (unknown code).
-- `POST /functions/v1/wa-lead` → `200 {ok:true}` and a real `leads` row (verified, then cleaned up); honeypot → `200 {ok:true,ignored:true}`.
-- `POST /functions/v1/data-deletion` (dummy `signed_request`, no APP_SECRET) → `200` returns `url: https://anvayra.vercel.app/deletion-status/?code=…`; `GET ?code=` → `200 pending`; unknown code → `404`. Test row cleaned (deployed v2).
-- `deletion-status/` page added (reads `?code=`, fetches GET status, `noindex`); `/data-deletion/` page now has a confirmation-code lookup form leading to it. `robots.txt` disallows `/deletion-status/`.
-- `vercel.json` now serves a `Content-Security-Policy` header (self + supabase host + facebook SDK / Embedded Signup).
-
-**Bugs found and fixed during deployment:**
-
-1. `wa-webhook` used `insert().onConflict().doNothing()` — this jsr build of
-   supabase-js lacks `onConflict` on insert (threw `…onConflict is not a function`).
-   Fixed with `.upsert({…}, { onConflict: "event_key", ignoreDuplicates: true })`
-   (v2 `upsert` options — verified working; duplicate event acked, fresh event stored). Local file synced.
-2. `wa-send` rewritten cleanly: removed dead `getUser`/`userErr` duplicated call,
-   implemented contact+thread resolution and `messages` logging inline (no
-   undefined helpers), failure path records a failed message + activity log,
-   fixed `resp.messages[0].id` → `result.messages[0].id`.
-
-### You still need to set these secrets (no MCP secrets tool exists)
-
-Dashboard → your project → Edge Functions → **Secrets**, or `supabase secrets set`:
-
-- `META_APP_SECRET` (App Secret from Meta App Dashboard → Basic Settings)
-- `WHATSAPP_SYSTEM_USER_TOKEN` (permanent System User token, `whatsapp_business_messaging` + `whatsapp_business_management`)
-- `META_APP_ID=1111754955165517` (has a sane default, set anyway)
-- `GRAPH_VERSION=v21.0` (optional, defaults to v21.0)
-
-### Meta dashboard configuration (App Review → webhook)
-
-- Callback URL: `https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/wa-webhook`
-- Verify token: `anvayra-meta-verify-1111754955165517`
-- Fields: `messages` (add `message_template_status_update` later), max 5. Click
-  **Verify and save** — this fires the GET handshake.
-
-### Still pending (user actions)
-
-1. Google Cloud OAuth Client (ID + Secret) → Supabase Auth → Google. Redirect URI: `https://nbxsebcrcussmmxismsa.supabase.co/auth/v1/callback`. (currently `sso_providers` empty)
-2. Final production domain → sitemap/canonical/robots/OAuth redirects.
-3. System User token + App Secret secrets (above).
-4. Complete an Embedded Signup from the dashboard to land the WABA in the vault →
-   real sends work (P5).
-5. Data Deletion callback URL in Meta App Dashboard Basic Settings →
-   `https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/data-deletion`
-
-### P4 roadmap (next)
-Replace the localStorage workspace model with live Supabase data (accounts, threads,
-messages, realtime), wire `wa-send`/`wa-connect` to real DB account IDs + workspace
-membership, then P5 Embedded Signup end-to-end.
-
----
-
-## 11 · P3.5 — Auth flash fix, frontend/backend split, deploy repair (26 Oct 2026)
-
-### Reported symptoms
-
-1. Clicking **Open dashboard** showed the workspace for 0.3–4 ms, then redirected to `/login/`.
-   App Review rejects protected content being visible before authentication.
-2. **Continue with Google** ended up at `localhost:3000` instead of the live site.
-
-### Cause 1 — protected UI painted before the session was checked
-
-`dashboard/index.html` shipped the whole workspace markup. The auth guard lived in
-`workspace.js`, which runs only after the document is parsed and `requireSession()`
-resolves. Every unauthenticated visit therefore painted protected UI, then navigated.
-
-### Fix 1 — decide before first paint
-
-- `frontend/dashboard/index.html` now has an inline gate in `<head>`:
-  - reads the stored session key `anvayra.auth.v2`;
-  - if there is no session and the URL is not an OAuth / magic-link landing
-    (`access_token|refresh_token|error|error_description|code`), it calls
-    `location.replace('../login/?next=dashboard')` **before** `<body>` exists;
-  - if a session exists it shows a full-screen “Checking your session…” splash.
-- CSS keeps `.ws` at `visibility: hidden` until `body.auth-ready` is set.
-- `frontend/assets/js/workspace.js` adds `auth-ready` and removes the splash only
-  after `requireSession()` returns a validated session.
-- 8-second safety net: if auth never resolves (CDN blocked), redirect to login
-  instead of trapping the user on a blank page.
-
-**Verified on production** (`https://anvayra.vercel.app`):
-
-| Scenario | Result |
-| --- | --- |
-| Signed out → `/dashboard` | ends on `/login?next=dashboard`, `.ws` never exists in the DOM |
-| Signed in → `/dashboard` | splash → workspace, `auth-ready` true, name populated |
-| First paint for signed-out | no workspace markup, so nothing to flash |
-
-### Cause 2 — Google OAuth fell back to Site URL
-
-`auth.js` already sent `redirect_to=https://anvayra.vercel.app/dashboard/`, but
-GoTrue only honours a `redirect_to` that is in the project's allowed list.
-Proof from the auth schema after starting a real authorize request:
-
-```
-select referrer from auth.flow_state order by created_at desc;
--- google flow requested with https://anvayra.vercel.app/dashboard/
--- stored referrer: http://localhost:3000
-```
-
-GoTrue silently replaced the production URL with **Site URL** (`http://localhost:3000`)
-because it was not allow-listed. This is a project setting, not application code —
-no MCP tool exposes it, so it must be set in the dashboard (see below).
-
-### Fix 2 — app side
-
-`auth.js` gained `oauthRedirect()`: it always derives the destination from the
-current origin (`https://anvayra.vercel.app/dashboard/` in production, the local
-origin in development) and passes `queryParams.prompt=select_account`. The
-server-side allow-list still has to match; the app cannot override it.
-
-**Required dashboard setting** (Supabase → Authentication → URL Configuration):
-
-- Site URL: `https://anvayra.vercel.app`
-- Redirect URLs: `https://anvayra.vercel.app/**` and `http://localhost:3000/**`
-
-### Repository layout
-
-```
-frontend/                     static site published by Vercel
-  index.html  dashboard/  login/  signup/  privacy/  terms/
-  data-deletion/  deletion-status/  thank-you/  404.html
+frontend/                    static site published by Vercel
+  index.html                 marketing + product explanation
+  login/ signup/             authentication screens
+  dashboard/                 authenticated workspace (single document, five views)
+  privacy/ terms/            legal pages
+  data-deletion/             deletion instructions + status lookup entry
+  deletion-status/           deletion confirmation-code lookup
+  thank-you/ 404.html
   assets/{css,js,img,fonts}/
 backend/
-  supabase/functions/         wa-webhook, wa-send, wa-connect, wa-lead,
-                              data-deletion, health
-  README.md                   secrets, auth, deploy notes
-docs/                         planning only — never published
-vercel.json                   builds frontend/ into dist/
+  supabase/functions/        Edge Functions (Deno/TypeScript)
+  server/                    optional Express session-check service
+docs/                        internal documentation — never published
+scripts/check-vercel-routes.mjs
+vercel.json                  builds frontend/ into dist/
 ```
 
-`vercel.json` runs `buildCommand: rm -rf dist && mkdir -p dist && cp -r frontend/. dist/`
-with `outputDirectory: dist`. `/docs/**` rewrites to `404.html`, and live checks
-confirm `/docs/plan.md` and `/backend/README.md` both return 404.
+`vercel.json` runs:
 
-### Deploy incident — invalid route source pattern
-
-The first two pushes failed to deploy. Vercel reported
-`invalid-route-source-pattern`; GitHub status on both commits was `failure`.
-Cause: cache rules used **nested regex groups**, which Vercel's path-to-regexp
-parser rejects:
-
-```
-/assets/(.*\.(js|css))          <- invalid (nested capturing groups)
+```bash
+rm -rf dist && mkdir -p dist && cp -r frontend/. dist/
 ```
 
-Fixed by using one non-nested rule per asset directory:
+Only `dist/` is served. `docs/` and `backend/` are not part of the deployment output, and
+`/docs/:path*` additionally rewrites to `404.html`.
 
+---
+
+## 4. Data model
+
+| Table | Purpose |
+|---|---|
+| `profiles` | Display name, business name, contact details per auth user |
+| `workspaces` | Tenant boundary; one per customer |
+| `workspace_members` | User ↔ workspace membership and role |
+| `whatsapp_accounts` | Connected WABA + phone number, status, label; unique `phone_number_id` |
+| `contacts` | Per-workspace WhatsApp contacts, consent state, last seen |
+| `threads` | Conversation per account + contact, unread count, last message preview |
+| `messages` | Inbound/outbound messages, `wamid`, delivery status, error details |
+| `message_status_events` | Raw delivered/read/failed status transitions |
+| `templates` | Approved/pending templates synced from Meta; unique `(account_id,name,language)` |
+| `automations` | Six preference rows per WhatsApp account, auto-created by DB trigger |
+| `activity_log` | Workspace-visible operational events |
+| `suppressions` | Opt-out / STOP list enforced before marketing sends |
+| `webhook_events` | Idempotent raw webhook storage keyed by event |
+| `leads` | Public contact-form submissions with consent metadata |
+| `rate_limits` | Server-side send/lead throttling counters |
+| `deletion_requests` | Data-deletion confirmation codes and status |
+
+### Access rules
+
+- RLS is enabled on all business tables.
+- Members can `SELECT` accounts, threads, messages, contacts, templates, automations and
+  activity for workspaces they belong to.
+- `automations` allows member `UPDATE`; `workspaces` allows admin `UPDATE`.
+- The browser cannot `INSERT`/`UPDATE` accounts, threads or messages. Those writes happen only
+  inside Edge Functions using the service role.
+- Owners get profile + workspace + membership provisioned by the `on_auth_user_created` trigger.
+- Creating a WhatsApp account seeds six `automations` rows via a DB trigger.
+
+---
+
+## 5. WhatsApp integration
+
+### 5.1 Constants
+
+| Constant | Value |
+|---|---|
+| Meta App ID | `1111754955165517` |
+| Embedded Signup configuration | `1469679065081628` |
+| Business Portfolio ID | `983719140695281` |
+| Graph API version | `v21.0` |
+| Webhook verify token | `anvayra-meta-verify-1111754955165517` |
+
+### 5.2 `wa-connect`
+
+`POST { code, workspaceId, wabaId?, phoneNumberId?, label? }` with a user JWT.
+
+1. Exchanges the Embedded Signup code with `META_APP_ID` + `META_APP_SECRET`.
+2. Upgrades the token to a long-lived token and records granted scopes.
+3. Resolves the selected WABA and phone number (explicit Embedded Signup selection first).
+4. Subscribes the app to the WABA via `POST /{wabaId}/subscribed_apps`.
+5. Stores the token in the server-side vault (`store_wa_token`) and upserts `whatsapp_accounts`.
+
+The browser receives only the WABA ID and Phone Number ID. It never receives the access token.
+
+### 5.3 `wa-send`
+
+`POST { accountId, to, text | templateName, templateLang? }` with a user JWT.
+
+- Verifies workspace membership, connected status and `phone_number_id`.
+- Checks `suppressions` and `rate_limits` before calling the Cloud API.
+- Sends with the vault token; stores the outbound message and its `wamid`.
+- Records failed attempts with Meta's error code and message.
+
+### 5.4 `wa-webhook`
+
+- `GET` performs the `hub.challenge` handshake against `WHATSAPP_VERIFY_TOKEN`.
+- `POST` verifies `X-Hub-Signature-256` HMAC-SHA256 using `META_APP_SECRET`.
+- Events are stored idempotently in `webhook_events` before processing.
+- Inbound messages upsert contacts (without overwriting consent), create/find the thread,
+  persist the message and increment unread count.
+- STOP / unsubscribe / cancel / end / block sets `contacts.opt_in_state = 'opted_out'` and
+  writes a `suppressions` row.
+- Delivery statuses update `messages` and append to `message_status_events`.
+- Always answers `200` to Meta.
+
+### 5.5 `wa-templates`
+
+`POST { accountId }` with a user JWT. Fetches `/{wabaId}/message_templates` with the vault token,
+upserts by `(account_id,name,language)` and deletes rows Meta no longer returns.
+
+### 5.6 Supporting functions
+
+| Function | Auth | Purpose |
+|---|---|---|
+| `wa-lead` | public, honeypot + rate limit | Contact-form intake into `leads` |
+| `data-deletion` | Meta `signed_request` + status lookup | Deletion callback and confirmation codes |
+| `health` | public | Liveness + whether server secrets are configured |
+
+---
+
+## 6. Workspace behaviour
+
+- Auth gate runs in `<head>` before `<body>` exists. A visitor without a stored session is
+  redirected to `/login/?next=dashboard` before any protected markup can paint.
+- Accounts, threads, messages, contacts, templates, automations and activity are loaded from
+  Postgres for the signed-in user's workspace.
+- The rail lists only real `whatsapp_accounts` rows. An empty workspace shows a "no accounts yet"
+  message and a Connect button.
+- Templates are never seeded. They appear only after `wa-templates` syncs them from Meta.
+- Automation switches are saved account preferences. They do not claim to execute workflows.
+- Sending requires a connected account; unconnected accounts show `Setup · Cloud API` and
+  disable the composer.
+- Dashboard panels scroll independently inside `100dvh`; the page itself does not scroll.
+
+---
+
+## 7. Deployment
+
+### 7.1 Frontend
+
+```bash
+cd /home/ronny/Desktop/anvayra
+node scripts/check-vercel-routes.mjs
+git push origin main
 ```
-/assets/js/(.*)      -> public, max-age=0, must-revalidate
-/assets/css/(.*)     -> public, max-age=0, must-revalidate
-/assets/img/(.*)     -> public, max-age=31536000, immutable
-/assets/fonts/(.*)   -> public, max-age=31536000, immutable
+
+Vercel builds `frontend/` into `dist/`. `cleanUrls` serves `/dashboard`, `/login`, `/signup`,
+`/thank-you`; legacy `.html` paths rewrite to the clean URLs. `/docs/*` returns 404.
+
+Security headers include CSP, `X-Content-Type-Options`, `X-Frame-Options`,
+`Referrer-Policy` and `Permissions-Policy`. Asset directories use non-nested cache rules.
+
+### 7.2 Edge Functions
+
+Deploy from `backend/supabase/functions/<name>/index.ts`:
+
+| Function | `verify_jwt` |
+|---|---|
+| `wa-connect` | `true` |
+| `wa-send` | `true` |
+| `wa-templates` | `true` |
+| `wa-webhook` | `false` (own HMAC verification) |
+| `wa-lead` | `false` |
+| `data-deletion` | `false` |
+| `health` | `false` |
+
+### 7.3 Required secrets
+
+Set in Supabase → Edge Functions → Secrets:
+
+- `META_APP_SECRET`
+- `WHATSAPP_SYSTEM_USER_TOKEN` (server-side System User token; never expires in 24 hours)
+- `META_APP_ID=1111754955165517`
+- `GRAPH_VERSION=v21.0`
+
+`health` reports `appSecretConfigured` and `systemTokenConfigured` so configuration can be
+checked without exposing values.
+
+### 7.4 Supabase Auth URL configuration
+
+Set in Supabase → Authentication → URL Configuration:
+
+- Site URL: `https://anvayra.vercel.app`
+- Redirect URLs: `https://anvayra.vercel.app/**`, `http://localhost:3000/**`
+
+Without this, Google OAuth falls back to the Site URL and can land on `localhost:3000`.
+
+### 7.5 Meta dashboard
+
+- Webhook callback: `https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/wa-webhook`
+- Verify token: `anvayra-meta-verify-1111754955165517`
+- Fields: `messages` (add `message_template_status_update` when enabled)
+- Data Deletion callback:
+  `https://nbxsebcrcussmmxismsa.supabase.co/functions/v1/data-deletion`
+- Embedded Signup config `1469679065081628` must allow the production domain.
+
+---
+
+## 8. Current status
+
+### Complete
+
+- Public website, legal pages, contact form, lead intake, 404 handling.
+- Real authentication (email/password + Google OAuth) with pre-paint auth gate.
+- Postgres-backed workspace across all five views.
+- Empty states for accounts, contacts, threads, templates and automations.
+- Scroll fix for every dashboard panel at desktop and mobile heights.
+- `wa-connect`, `wa-send`, `wa-webhook`, `wa-templates`, `wa-lead`, `data-deletion`, `health`
+  implemented and deployed.
+- Webhook signature verification, idempotent event storage, STOP suppression.
+- Template sync from Meta.
+- Removal of placeholder accounts, shared sign-in, seeded conversations, simulated replies and
+  placeholder badges.
+- Removal of the shared reviewer account; only real customer accounts remain.
+- Asset cache-busting (`?v=20261027`).
+- Vercel route/header validation script.
+
+### Pending (external inputs)
+
+| Item | Owner | Why it blocks |
+|---|---|---|
+| `META_APP_SECRET`, `WHATSAPP_SYSTEM_USER_TOKEN` | Owner | Embedded Signup exchange and signed webhooks need them |
+| Auth Site URL + Redirect URLs | Owner | Google OAuth currently falls back to Site URL |
+| Complete one Embedded Signup | Owner + Eng | Produces the first real WABA/phone row and vault token |
+| Real send + inbound reply test | Owner + Eng | Proves the full Cloud API loop |
+| Final production domain | Owner | Canonical, sitemap, OAuth redirects, Meta app domains |
+| Revoke the leaked OAuth session | Owner | Token was exposed in a pasted callback URL |
+
+---
+
+## 9. Verification
+
+Run before each deploy:
+
+```bash
+for f in frontend/assets/js/*.js; do node --check "$f" || exit 1; done
+node scripts/check-vercel-routes.mjs
 ```
 
-The corrected rules were validated with `@vercel/routing-utils`
-(`getTransformedRoutes` → valid) before pushing, and the commit deployed green.
-Inline CSS/JS URLs also carry `?v=20261026`, so browsers that cached the old
-immutable JS cannot keep serving the unguarded version.
+Local smoke test:
 
-### Still pending (user actions)
+```bash
+python3 -m http.server 3000 --directory frontend
+```
 
-1. Set Site URL + Redirect URLs as above (fixes Google → `localhost:3000`).
-2. Set Edge Function secrets: `META_APP_SECRET`, `WHATSAPP_SYSTEM_USER_TOKEN`
-   (`health` currently reports both as `false`).
-3. Set the Meta Data Deletion callback and webhook URLs.
-4. Confirm the final production domain.
+| Check | Expected |
+|---|---|
+| Signed out → `/dashboard/` | Redirect to `/login/?next=dashboard`, no workspace paint |
+| Signed in → `/dashboard/` | Splash, then workspace with real data |
+| Settings panel at 800 px height | Panel scrolls; page body does not |
+| Templates with no account | Sync disabled, explicit empty state |
+| Automations with an account | Six rows loaded from Postgres; toggle persists |
+| `GET /functions/v1/health` | `200 {ok:true}` with secret status booleans |
+| `POST /functions/v1/wa-connect` without JWT | `401` |
+| `GET /functions/v1/wa-webhook` wrong token | `403` |
+| `/docs/plan.md` on production | `404` |
 
-### Express backend (Node)
+---
 
-Per the user's request, a real Node/Express backend now lives in
-`backend/server/` (`src/index.js`). It adds an authoritative session check —
-`POST /api/auth/session` verifies the Supabase access token server-side with the
-service-role key and returns `{ authenticated, user }`. The frontend can opt in
-by setting `window.AnvayraServerSessionUrl` in `frontend/assets/js/auth.js`;
-when unset it relies on Supabase `getUser` (still server-side auth). The Express
-host is optional and documented in `backend/README.md`.
+## 10. Known limitations
+
+- No automated browser test suite; checks are manual plus syntax and route validation.
+- Retention is stated in the privacy policy but no scheduled purge job runs yet.
+- Automation switches store intent only; no workflow engine executes them.
+- Coexistence is not enabled; it requires a separate Meta onboarding track.
+- The final production domain is not confirmed.
